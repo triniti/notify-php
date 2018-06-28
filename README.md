@@ -20,7 +20,32 @@ services:
     autoconfigure: true
     public: false
 
-  Triniti\notify\:
+  Triniti\Notify\:
     resource: '%kernel.project_dir%/vendor/triniti/notify/src/**/*'
+    exclude: '%kernel.project_dir%/vendor/triniti/notify/src/Notifier/*'
+    #tags:
+    #  - {name: monolog.logger, channel: notify}
+    #bind:
+    #  $logger: '@monolog.logger.notify'
+
+  Triniti\Notify\NotifyLocator: '@Triniti\Notify\ContainerAwareNotifierLocator'
+
+  Triniti\Notify\Notifier\:
+    resource: '%kernel.project_dir%/vendor/triniti/notify/src/Notifier/*Notifier'
+    public: true
+    #tags:
+    #  - {name: monolog.logger, channel: notify}
+    #bind:
+    #  $logger: '@monolog.logger.notify'
+
+  # todo: implement the notifiers
+  acme_notify.alexa_notifier: '@Triniti\Notify\Notifier\AlexaNotifier'
+  acme_notify.android_notifier: '@Triniti\Notify\Notifier\AndroidNotifier'
+  acme_notify.apple_news_notifier: '@Triniti\Notify\Notifier\AppleNewsNotifier'
+  acme_notify.browser_notifier: '@Triniti\Notify\Notifier\BrowserNotifier'
+  acme_notify.email_notifier: '@Triniti\Notify\Notifier\EmailNotifier'
+  acme_notify.ios_notifier: '@Triniti\Notify\Notifier\IosNotifier'
+  acme_notify.slack_notifier: '@Triniti\Notify\Notifier\SlackNotifier'
+  acme_notify.sms_notifier: '@Triniti\Notify\Notifier\SmsNotifier'
 
 ```

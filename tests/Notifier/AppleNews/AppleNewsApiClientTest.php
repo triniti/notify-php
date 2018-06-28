@@ -19,6 +19,7 @@ class AppleNewsApiClientTest extends AbstractPbjxTest
 
     public function setUp()
     {
+        $this->markTestSkipped();
         $logger = new NullLogger();
         $this->appleNewsApiClient = new AppleNewsApiClient($logger, 'https://news-api.apple.com', 'key', 'secret');
     }

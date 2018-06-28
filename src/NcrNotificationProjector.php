@@ -210,7 +210,7 @@ class NcrNotificationProjector extends AbstractNodeProjector implements EventSub
         $status = $node->get('status');
 
         /** @var NotificationSendStatus $sendStatus */
-        $sendStatus = $node->get('send_status', NotificationSendStatus::UNKNOWN());
+        $sendStatus = $node->get('send_status', NotificationSendStatus::DRAFT());
 
         if ($status->equals(NodeStatus::DELETED())
             && !$sendStatus->equals(NotificationSendStatus::SENT())

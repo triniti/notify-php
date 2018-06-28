@@ -95,7 +95,7 @@ trait NotificationPbjxHelperTrait
         if ($notification->has('send_at')) {
             $notification->set('send_status', NotificationSendStatus::SCHEDULED());
         } else {
-            $notification->set('send_status', NotificationSendStatus::UNKNOWN());
+            $notification->set('send_status', NotificationSendStatus::DRAFT());
         }
     }
 
@@ -107,7 +107,7 @@ trait NotificationPbjxHelperTrait
     protected function alreadySent(Notification $notification): bool
     {
         /** @var NotificationSendStatus $status */
-        $status = $notification->get('send_status', NotificationSendStatus::UNKNOWN());
+        $status = $notification->get('send_status', NotificationSendStatus::DRAFT());
 
         if ($status->equals(NotificationSendStatus::SENT())
             || $status->equals(NotificationSendStatus::FAILED())

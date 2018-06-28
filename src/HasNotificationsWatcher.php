@@ -213,7 +213,7 @@ class HasNotificationsWatcher implements EventSubscriber
             if ($node->has('send_at')) {
                 $node->set('send_status', NotificationSendStatus::SCHEDULED());
             } else {
-                $node->set('send_status', NotificationSendStatus::UNKNOWN());
+                $node->set('send_status', NotificationSendStatus::DRAFT());
             }
 
             if (null !== $title) {
@@ -283,7 +283,7 @@ class HasNotificationsWatcher implements EventSubscriber
         return $request
             ->set('q', sprintf(
                 '+status:(%s OR %s)',
-                NotificationSendStatus::UNKNOWN,
+                NotificationSendStatus::DRAFT,
                 NotificationSendStatus::SCHEDULED
             ))
             ->set('sort', SearchNotificationsSort::CREATED_AT_ASC())
