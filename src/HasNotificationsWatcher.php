@@ -282,7 +282,7 @@ class HasNotificationsWatcher implements EventSubscriber
         $pbjx->copyContext($event, $request);
         return $request
             ->set('q', sprintf(
-                '+status:(%s OR %s)',
+                '+send_status:(%s OR %s)',
                 NotificationSendStatus::DRAFT,
                 NotificationSendStatus::SCHEDULED
             ))

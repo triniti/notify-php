@@ -2,5 +2,9 @@
 This changelog references the relevant changes done in 0.x versions.
 
 
+## v0.1.1
+* Fix HasNotificationsWatcher SearchNotificationsRequest query bug.
+
+
 ## v0.1.0
 * Initial version.
