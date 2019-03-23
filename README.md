@@ -43,7 +43,7 @@ services:
   acme_notify.android_notifier: '@Triniti\Notify\Notifier\AndroidNotifier'
   acme_notify.apple_news_notifier: '@Triniti\Notify\Notifier\AppleNewsNotifier'
   acme_notify.browser_notifier: '@Triniti\Notify\Notifier\BrowserNotifier'
-  acme_notify.email_notifier: '@Triniti\Notify\Notifier\EmailNotifier'
+  acme_notify.email_notifier: '@Triniti\Notify\Notifier\SendGridEmailNotifier'
   acme_notify.ios_notifier: '@Triniti\Notify\Notifier\IosNotifier'
   acme_notify.slack_notifier: '@Triniti\Notify\Notifier\SlackNotifier'
   acme_notify.sms_notifier: '@Triniti\Notify\Notifier\SmsNotifier'
