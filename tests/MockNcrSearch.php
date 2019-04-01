@@ -35,8 +35,8 @@ class MockNcrSearch implements NcrSearch
                                 ParsedQuery $parsedQuery,
                                 SearchNodesResponse $response,
                                 array $qnames = [],
-                                array $context = []): void
-    {
+                                array $context = []
+    ): void {
         // do nothing
     }
 }

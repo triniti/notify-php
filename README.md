@@ -18,21 +18,21 @@ services:
   _defaults:
     autowire: true
     autoconfigure: true
-    public: false
+    public: true
 
   Triniti\Notify\:
     resource: '%kernel.project_dir%/vendor/triniti/notify/src/**/*'
     exclude: '%kernel.project_dir%/vendor/triniti/notify/src/Notifier/*'
+    public: false
     #tags:
     #  - {name: monolog.logger, channel: notify}
     #bind:
     #  $logger: '@monolog.logger.notify'
 
-  Triniti\Notify\NotifyLocator: '@Triniti\Notify\ContainerAwareNotifierLocator'
+  Triniti\Notify\NotifierLocator: '@Triniti\Notify\ContainerAwareNotifierLocator'
 
   Triniti\Notify\Notifier\:
-    resource: '%kernel.project_dir%/vendor/triniti/notify/src/Notifier/*Notifier'
-    public: true
+    resource: '%kernel.project_dir%/vendor/triniti/notify/src/Notifier/*Notifier*'
     #tags:
     #  - {name: monolog.logger, channel: notify}
     #bind:

@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 0.x versions.
 
 
+## v0.2.1
+* Add `AppleNewsNotifier` for Apple News notifications.
+
+
 ## v0.2.0
 * Add `SendGridEmailNotifier` for email notifications.
 

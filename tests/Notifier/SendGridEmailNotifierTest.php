@@ -7,6 +7,7 @@ use Acme\Schemas\Canvas\Block\TextBlockV1;
 use Acme\Schemas\Iam\Node\EmailAppV1;
 use Acme\Schemas\News\Node\ArticleV1;
 use Acme\Schemas\Notify\Node\EmailNotificationV1;
+use Acme\Schemas\Sys\Node\FlagsetV1;
 use Defuse\Crypto\Crypto;
 use Defuse\Crypto\Key;
 use Gdbots\Schemas\Ncr\Enum\NodeStatus;
@@ -16,6 +17,7 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use Triniti\Notify\Notifier\SendGridEmailNotifier;
+use Triniti\Sys\Flags;
 use Triniti\Tests\Notify\AbstractPbjxTest;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
@@ -40,7 +42,11 @@ class SendGridEmailNotifierTest extends AbstractPbjxTest
         $loader->addPath(realpath(__DIR__ . '/../Fixtures/templates/email_notifications'), 'email_notifications');
         $this->twig = new Environment($loader, ['debug' => true]);
 
-        $this->notifier = new class($this->key, $this->twig) extends SendGridEmailNotifier
+        $flagset = FlagsetV1::fromArray(['_id' => 'test']);
+        $this->ncr->putNode($flagset);
+        $flags = new Flags($this->ncr, 'acme:flagset:test');
+
+        $this->notifier = new class($flags, $this->key, $this->twig) extends SendGridEmailNotifier
         {
             protected function getGuzzleClient(): GuzzleClient
             {

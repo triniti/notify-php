@@ -24,11 +24,15 @@ use Triniti\Schemas\Notify\Mixin\HasNotifications\HasNotifications;
 use Triniti\Schemas\Notify\Mixin\Notification\Notification;
 use Triniti\Schemas\Notify\NotifierResult;
 use Triniti\Schemas\Notify\NotifierResultV1;
+use Triniti\Sys\Flags;
 use Twig\Environment;
 
 class SendGridEmailNotifier implements Notifier
 {
     const ENDPOINT = 'https://api.sendgrid.com/v3/';
+
+    /** @var Flags */
+    protected $flags;
 
     /** @var Key */
     protected $key;
@@ -43,11 +47,13 @@ class SendGridEmailNotifier implements Notifier
     protected $apiKey;
 
     /**
+     * @param Flags       $flags
      * @param Key         $key
      * @param Environment $twig
      */
-    public function __construct(Key $key, Environment $twig)
+    public function __construct(Flags $flags, Key $key, Environment $twig)
     {
+        $this->flags = $flags;
         $this->key = $key;
         $this->twig = $twig;
     }
@@ -63,6 +69,14 @@ class SendGridEmailNotifier implements Notifier
                 ->set('code', Code::INVALID_ARGUMENT)
                 ->set('error_name', 'NullContent')
                 ->set('error_message', 'Content cannot be null');
+        }
+
+        if ($this->flags->getBoolean('sendgrid_email_notifier_disabled')) {
+            return NotifierResultV1::create()
+                ->set('ok', false)
+                ->set('code', Code::CANCELLED)
+                ->set('error_name', 'SendGridEmailNotifierDisabled')
+                ->set('error_message', 'Flag [sendgrid_email_notifier_disabled] is true');
         }
 
         try {

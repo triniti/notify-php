@@ -95,7 +95,8 @@ class SendNotificationHandler extends AbstractNodeCommandHandler
                     ->set('code', Code::INVALID_ARGUMENT)
                     ->set('error_name', 'InvalidNotificationContent')
                     ->set('error_message', "Selected content [{$contentRef}] does not support notifications.");
-            } elseif (!NodeStatus::PUBLISHED()->equals($content->get('status'))) {
+                // If notification is a apple news delete operation then it ok the send notification against and unpublished article
+            } elseif (!NodeStatus::PUBLISHED()->equals($content->get('status')) && 'delete' !== $notification->get('apple_news_operation')) {
                 $result = NotifierResultV1::create()
                     ->set('ok', false)
                     ->set('code', Code::ABORTED)
