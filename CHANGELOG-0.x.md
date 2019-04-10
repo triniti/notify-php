@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 0.x versions.
 
 
+## v0.2.5
+* More precise difference checker in `HasNotificationsWatcher::scheduleNotification` before scheduling is executed.
+
+
 ## v0.2.4
 * When `HasNotificationsWatcher::scheduleNotification` runs, clone the nodes we get back from search to ensure nothing else is referencing the values we're about to mutate. 
 

@@ -6,6 +6,7 @@ namespace Triniti\Notify;
 use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Ncr\Ncr;
 use Gdbots\Ncr\NcrSearch;
+use Gdbots\Pbj\Message;
 use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbj\Schema;
 use Gdbots\Pbj\SchemaCurie;
@@ -244,7 +245,22 @@ class HasNotificationsWatcher implements EventSubscriber
                 $newNode->set('title', $title);
             }
 
-            return $newNode->equals($command->get('old_node')) ? null : $command;
+            /** @var Message $oldNode */
+            $oldNode = $command->get('old_node');
+
+            $old = serialize([
+                $oldNode->get('send_at'),
+                $oldNode->get('send_status'),
+                $oldNode->get('title'),
+            ]);
+
+            $new = serialize([
+                $newNode->get('send_at'),
+                $newNode->get('send_status'),
+                $newNode->get('title'),
+            ]);
+
+            return $old === $new ? null : $command;
         });
     }
 
