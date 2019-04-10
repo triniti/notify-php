@@ -211,6 +211,10 @@ class HasNotificationsWatcher implements EventSubscriber
         ?\DateTime $sendAt = null,
         ?string $title = null
     ): void {
+        if ($event->isReplay()) {
+            return;
+        }
+
         if (!$this->isNodeRefSupported($contentRef)) {
             return;
         }
