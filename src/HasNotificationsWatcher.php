@@ -231,19 +231,20 @@ class HasNotificationsWatcher implements EventSubscriber
 
         $this->forEachNotification($request, $pbjx, function (Notification $node)
         use ($sendAt, $title, $event, $pbjx) {
-            $command = $this->createUpdateNotification($node, $event, $pbjx);
-            $node->set('send_at', $sendAt);
-            if ($node->has('send_at')) {
-                $node->set('send_status', NotificationSendStatus::SCHEDULED());
+            $newNode = clone $node;
+            $command = $this->createUpdateNotification($newNode, $event, $pbjx);
+            $newNode->set('send_at', $sendAt);
+            if ($newNode->has('send_at')) {
+                $newNode->set('send_status', NotificationSendStatus::SCHEDULED());
             } else {
-                $node->set('send_status', NotificationSendStatus::DRAFT());
+                $newNode->set('send_status', NotificationSendStatus::DRAFT());
             }
 
             if (null !== $title) {
-                $node->set('title', $title);
+                $newNode->set('title', $title);
             }
 
-            return $node->equals($command->get('old_node')) ? null : $command;
+            return $newNode->equals($command->get('old_node')) ? null : $command;
         });
     }
 
@@ -340,7 +341,7 @@ class HasNotificationsWatcher implements EventSubscriber
 
         $command = $class::create()->set('node_ref', NodeRef::fromNode($notification));
         $pbjx->copyContext($event, $command);
-        return $command;
+        return $command->set('ctx_correlator_ref', $event->generateMessageRef());
     }
 
     /**
@@ -358,11 +359,14 @@ class HasNotificationsWatcher implements EventSubscriber
             SchemaCurie::fromString("{$curie->getVendor()}:{$curie->getPackage()}:command:update-notification")
         );
 
+        $oldNode = clone $notification;
+        $oldNode->freeze();
+
         $command = $class::create()
             ->set('node_ref', NodeRef::fromNode($notification))
-            ->set('old_node', (clone $notification)->freeze())
+            ->set('old_node', $oldNode)
             ->set('new_node', $notification);
         $pbjx->copyContext($event, $command);
-        return $command;
+        return $command->set('ctx_correlator_ref', $event->generateMessageRef());
     }
 }
