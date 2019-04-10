@@ -15,6 +15,7 @@ use Gdbots\Schemas\Ncr\Mixin\DeleteNode\DeleteNode;
 use Gdbots\Schemas\Ncr\Mixin\Node\Node;
 use Gdbots\Schemas\Ncr\Mixin\NodeDeleted\NodeDeleted;
 use Gdbots\Schemas\Ncr\Mixin\NodeExpired\NodeExpired;
+use Gdbots\Schemas\Ncr\Mixin\NodePublished\NodePublished;
 use Gdbots\Schemas\Ncr\Mixin\NodeScheduled\NodeScheduled;
 use Gdbots\Schemas\Ncr\Mixin\NodeUnpublished\NodeUnpublished;
 use Gdbots\Schemas\Ncr\Mixin\NodeUpdated\NodeUpdated;
@@ -25,6 +26,7 @@ use Gdbots\Schemas\Pbjx\Mixin\Event\Event;
 use Psr\Log\LoggerInterface;
 use Triniti\Schemas\Notify\Enum\NotificationSendStatus;
 use Triniti\Schemas\Notify\Enum\SearchNotificationsSort;
+use Triniti\Schemas\Notify\Mixin\AppleNewsNotification\AppleNewsNotification;
 use Triniti\Schemas\Notify\Mixin\HasNotifications\HasNotifications;
 use Triniti\Schemas\Notify\Mixin\HasNotifications\HasNotificationsV1Mixin;
 use Triniti\Schemas\Notify\Mixin\Notification\Notification;
@@ -67,6 +69,7 @@ class HasNotificationsWatcher implements EventSubscriber
         return [
             'gdbots:ncr:mixin:node-deleted'     => 'onNodeDeleted',
             'gdbots:ncr:mixin:node-expired'     => 'onNodeExpired',
+            'gdbots:ncr:mixin:node-published'   => 'onNodePublished',
             'gdbots:ncr:mixin:node-scheduled'   => 'onNodeScheduled',
             'gdbots:ncr:mixin:node-updated'     => 'onNodeUpdated',
             'gdbots:ncr:mixin:node-unpublished' => 'onNodeUnpublished',
@@ -89,6 +92,17 @@ class HasNotificationsWatcher implements EventSubscriber
     public function onNodeExpired(NodeExpired $event, Pbjx $pbjx): void
     {
         $this->cancelNotification($event, $pbjx);
+    }
+
+    /**
+     * @param NodePublished $event
+     * @param Pbjx          $pbjx
+     */
+    public function onNodePublished(NodePublished $event, Pbjx $pbjx): void
+    {
+        /** @var NodeRef $contentRef */
+        $contentRef = $event->get('node_ref');
+        $this->scheduleNotification($event, $pbjx, $contentRef, $event->get('published_at'));
     }
 
     /**
@@ -154,7 +168,7 @@ class HasNotificationsWatcher implements EventSubscriber
         if (null === $validQNames) {
             /** @var Schema $schema */
             foreach (HasNotificationsV1Mixin::findAll() as $schema) {
-                $validQNames[$schema->getQName()->getMessage()] = true;
+                $validQNames[$schema->getQName()->toString()] = true;
             }
         }
 
@@ -201,6 +215,11 @@ class HasNotificationsWatcher implements EventSubscriber
             return;
         }
 
+        if (null !== $sendAt) {
+            $sendAt = clone $sendAt;
+            $sendAt->modify('+10 seconds');
+        }
+
         $request = $this->createSearchNotificationsRequest($event, $pbjx);
         $request
             ->set('content_ref', $contentRef)
@@ -242,6 +261,16 @@ class HasNotificationsWatcher implements EventSubscriber
 
             /** @var Notification $node */
             foreach ($response->get('nodes', []) as $node) {
+                /*
+                 * If apple news notification and apple_news_operation is not notification then ignore.
+                 * This is because the AppleNewsWatcher in triniti/news is the one handling the notifications
+                 * to apple for create, update, delete and this watcher is responsible for more traditional
+                 * notifications like alerts, emails, etc.
+                 */
+                if ($node instanceof AppleNewsNotification && 'notification' !== $node->get('apple_news_operation')) {
+                    continue;
+                }
+
                 $lastDate = $node->get('created_at')->toDateTime();
                 /** @var Command $command */
                 $command = $factory($node);

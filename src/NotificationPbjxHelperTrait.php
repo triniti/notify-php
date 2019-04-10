@@ -77,19 +77,22 @@ trait NotificationPbjxHelperTrait
             return;
         }
 
-        if ($notification->has('content_ref') && $notification->get('send_on_publish')) {
+        if (!$notification->has('send_at')
+            && $notification->has('content_ref')
+            && $notification->get('send_on_publish')
+        ) {
             /** @var NodeRef $contentRef */
             $contentRef = $notification->get('content_ref');
             $content = $this->ncr->getNode($contentRef, false, $this->createNcrContext($notification));
-
             if (!$content instanceof HasNotifications || !$content instanceof Publishable) {
                 throw new InvalidNotificationContent();
             }
 
             $notification->set('title', $content->get('title'));
-            $notification->set('send_at', $content->get('published_at'));
-        } else {
-            $notification->set('send_on_publish', false);
+            if ($content->has('published_at')) {
+                $sendAt = clone $content->get('published_at');
+                $notification->set('send_at', $sendAt->modify('+10 seconds'));
+            }
         }
 
         if ($notification->has('send_at')) {

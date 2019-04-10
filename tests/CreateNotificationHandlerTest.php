@@ -48,7 +48,7 @@ final class CreateNotificationHandlerTest extends AbstractPbjxTest
             $this->assertTrue($appRef->equals($actualNode->get('app_ref')));
             $this->assertTrue($contentRef->equals($actualNode->get('content_ref')));
             $this->assertTrue($actualNode->get('send_on_publish'));
-            $this->assertEquals($content->get('published_at'), $actualNode->get('send_at'));
+            $this->assertEquals($content->get('published_at')->modify('+10 seconds'), $actualNode->get('send_at'));
             $this->assertSame('new article here', $actualNode->get('body'));
             $this->assertSame(StreamId::fromString("android-notification.history:{$expectedId}")->toString(), $streamId->toString());
             $this->assertSame($event->generateMessageRef()->toString(), (string)$actualNode->get('last_event_ref'));

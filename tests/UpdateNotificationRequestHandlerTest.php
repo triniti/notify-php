@@ -19,9 +19,12 @@ final class UpdateNotificationRequestHandlerTest extends AbstractPbjxTest
 {
     public function testHandle(): void
     {
+        $videoNode = VideoV1::create();
+        $this->ncr->putNode($videoNode);
+
         $oldNode = BrowserNotificationV1::create()
             ->set('app_ref', NodeRef::fromNode(BrowserAppV1::create()))
-            ->set('content_ref', NodeRef::fromNode(VideoV1::create()))
+            ->set('content_ref', NodeRef::fromNode($videoNode))
             ->set('send_status', NotificationSendStatus::SCHEDULED())
             ->set('send_at', new \DateTime('2020-01-01'));
 
@@ -30,7 +33,7 @@ final class UpdateNotificationRequestHandlerTest extends AbstractPbjxTest
         $newNode = BrowserNotificationV1::create()
             ->set('_id', $oldNode->get('_id'))
             ->set('app_ref', NodeRef::fromNode(BrowserAppV1::create()))
-            ->set('content_ref', NodeRef::fromNode(VideoV1::create()))
+            ->set('content_ref', NodeRef::fromNode($videoNode))
             ->set('send_at', new \DateTime('2020-01-02'))
             ->set('body', 'message updated');
 
