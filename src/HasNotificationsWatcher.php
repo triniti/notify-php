@@ -199,17 +199,17 @@ class HasNotificationsWatcher implements EventSubscriber
     }
 
     /**
-     * @param Event     $event
-     * @param Pbjx      $pbjx
-     * @param NodeRef   $contentRef
-     * @param \DateTime $sendAt
-     * @param string    $title
+     * @param Event              $event
+     * @param Pbjx               $pbjx
+     * @param NodeRef            $contentRef
+     * @param \DateTimeInterface $sendAt
+     * @param string             $title
      */
     public function scheduleNotification(
         Event $event,
         Pbjx $pbjx,
         NodeRef $contentRef,
-        ?\DateTime $sendAt = null,
+        ?\DateTimeInterface $sendAt = null,
         ?string $title = null
     ): void {
         if ($event->isReplay()) {

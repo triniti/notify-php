@@ -149,7 +149,7 @@ class NcrNotificationProjector extends AbstractNodeProjector implements EventSub
         /** @var NodeRef $nodeRef */
         $nodeRef = $event->get('node_ref') ?: NodeRef::fromNode($node);
 
-        /** @var \DateTime $sendAt */
+        /** @var \DateTimeInterface $sendAt */
         $sendAt = $node->get('send_at');
 
         $command = $this->createSendNotification($node, $event, $pbjx)->set('node_ref', $nodeRef);
@@ -179,7 +179,7 @@ class NcrNotificationProjector extends AbstractNodeProjector implements EventSub
         $nodeRef = $event->get('node_ref') ?: NodeRef::fromNode($newNode);
         $sendAtField = $newNode::schema()->getField('send_at');
 
-        /** @var \DateTime $oldSendAt */
+        /** @var \DateTimeInterface $oldSendAt */
         $oldSendAt = $oldNode ? $oldNode->get('send_at') : null;
 
         $oldSendAt = $sendAtField->getType()->encode($oldSendAt, $sendAtField);

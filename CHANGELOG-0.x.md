@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 0.x versions.
 
 
+## v0.2.6
+* Use `DateTimeInterface` typehint instead of `DateTime` to ensure mutable and immutable versions are accepted.
+
+
 ## v0.2.5
 * More precise difference checker in `HasNotificationsWatcher::scheduleNotification` before scheduling is executed.
 
