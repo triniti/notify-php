@@ -222,7 +222,7 @@ class HasNotificationsWatcher implements EventSubscriber
 
         if (null !== $sendAt) {
             $sendAt = clone $sendAt;
-            $sendAt->modify('+10 seconds');
+            $sendAt = $sendAt->modify('+10 seconds');
         }
 
         $request = $this->createSearchNotificationsRequest($event, $pbjx);
