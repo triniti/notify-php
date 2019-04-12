@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 0.x versions.
 
 
+## v0.2.8
+* In `HasNotificationsWatcher::createUpdateNotification` do not set `old_node`.
+
+
 ## v0.2.7
 * In `HasNotificationsWatcher::scheduleNotification` since data is immutable, when modifying it, set it to a variable.
 

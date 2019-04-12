@@ -6,7 +6,6 @@ namespace Triniti\Notify;
 use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Ncr\Ncr;
 use Gdbots\Ncr\NcrSearch;
-use Gdbots\Pbj\Message;
 use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbj\Schema;
 use Gdbots\Pbj\SchemaCurie;
@@ -245,13 +244,10 @@ class HasNotificationsWatcher implements EventSubscriber
                 $newNode->set('title', $title);
             }
 
-            /** @var Message $oldNode */
-            $oldNode = $command->get('old_node');
-
             $old = serialize([
-                $oldNode->get('send_at'),
-                $oldNode->get('send_status'),
-                $oldNode->get('title'),
+                $node->get('send_at'),
+                $node->get('send_status'),
+                $node->get('title'),
             ]);
 
             $new = serialize([
@@ -375,12 +371,8 @@ class HasNotificationsWatcher implements EventSubscriber
             SchemaCurie::fromString("{$curie->getVendor()}:{$curie->getPackage()}:command:update-notification")
         );
 
-        $oldNode = clone $notification;
-        $oldNode->freeze();
-
         $command = $class::create()
             ->set('node_ref', NodeRef::fromNode($notification))
-            ->set('old_node', $oldNode)
             ->set('new_node', $notification);
         $pbjx->copyContext($event, $command);
         return $command->set('ctx_correlator_ref', $event->generateMessageRef());
