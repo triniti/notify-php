@@ -92,7 +92,7 @@ class AppleNewsNotifierTest extends AbstractPbjxTest
         $this->mockAppleNewsNotifier->method('sendNotification')->willReturn(['ok' => false, 'code' => 1, 'response' => 'test', 'error_name' => 'test', 'error_message' => 'test']);
 
         UriTemplateService::registerGlobals([
-            'web_base_url' => $_SERVER['WEB_BASE_URL'] ?? 'https://www.tmz.com/',
+            'web_base_url' => $_SERVER['WEB_BASE_URL'] ?? 'https://acme.local/',
         ]);
 
         UriTemplateService::registerTemplates([

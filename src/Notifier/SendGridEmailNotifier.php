@@ -80,6 +80,7 @@ class SendGridEmailNotifier implements Notifier
         }
 
         try {
+            $this->guzzleClient = null;
             $this->validate($notification, $app);
             $this->apiKey = Crypto::decrypt($app->get('sendgrid_api_key'), $this->key);
             $campaign = $this->buildCampaign($notification, $app, $content);

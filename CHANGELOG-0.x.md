@@ -2,6 +2,12 @@
 This changelog references the relevant changes done in 0.x versions.
 
 
+## v0.3.0
+* Add `AzureAndroidNotifier` for Android app notifications.
+* Add `AzureIosNotifier` for iOS app notifications.
+* Add more unit tests for notifiers.
+
+
 ## v0.2.8
 * In `HasNotificationsWatcher::createUpdateNotification` do not set `old_node`.
 
