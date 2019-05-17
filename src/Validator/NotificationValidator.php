@@ -4,15 +4,20 @@ declare(strict_types=1);
 namespace Triniti\Notify\Validator;
 
 use Gdbots\Pbj\Assertion;
+use Gdbots\Pbj\Message;
 use Gdbots\Pbj\Schema;
 use Gdbots\Pbjx\DependencyInjection\PbjxValidator;
 use Gdbots\Pbjx\Event\PbjxEvent;
 use Gdbots\Pbjx\EventSubscriber;
 use Gdbots\Schemas\Ncr\NodeRef;
+use Triniti\Notify\Exception\NotificationAlreadyScheduled;
 use Triniti\Notify\Exception\NotificationAlreadySent;
 use Triniti\Notify\NotificationPbjxHelperTrait;
+use Triniti\Schemas\Notify\Enum\NotificationSendStatus;
+use Triniti\Schemas\Notify\Mixin\AppleNewsNotification\AppleNewsNotification;
 use Triniti\Schemas\Notify\Mixin\Notification\Notification;
 use Triniti\Schemas\Notify\Mixin\Notification\NotificationV1Mixin;
+use Triniti\Schemas\Notify\Mixin\SearchNotificationsRequest\SearchNotificationsRequestV1Mixin;
 
 class NotificationValidator implements EventSubscriber, PbjxValidator
 {
@@ -51,7 +56,7 @@ class NotificationValidator implements EventSubscriber, PbjxValidator
         $nodeRef = NodeRef::fromNode($node);
 
         Assertion::true(
-            $this->isSupportedByApp($nodeRef->getQName(), $node->get('app_ref')),
+            $this->isSupportedByApp($nodeRef->getQName(), $appRef),
             sprintf(
                 'The app [%s] does not support the [%s].',
                 $appRef->toString(),
@@ -59,6 +64,10 @@ class NotificationValidator implements EventSubscriber, PbjxValidator
             ),
             'node.app_ref'
         );
+
+        if ($node->has('content_ref')) {
+            $this->ensureNotAlreadyScheduled($pbjxEvent, $node);
+        }
     }
 
     /**
@@ -94,6 +103,38 @@ class NotificationValidator implements EventSubscriber, PbjxValidator
         // at the start of the request
         if ($this->alreadySent($oldNode)) {
             throw new NotificationAlreadySent();
+        }
+    }
+
+    /**
+     * @param PbjxEvent $event
+     * @param Message   $notification
+     *
+     * @throws NotificationAlreadyScheduled
+     */
+    protected function ensureNotAlreadyScheduled(PbjxEvent $event, Message $notification): void
+    {
+        if ($notification instanceof AppleNewsNotification && 'notification' !== $notification->get('apple_news_operation')) {
+            return;
+        }
+
+        /** @var NodeRef $appRef */
+        $appRef = $notification->get('app_ref');
+
+        /** @var NodeRef $contentRef */
+        $contentRef = $notification->get('content_ref');
+
+        $request = SearchNotificationsRequestV1Mixin::findOne()->createMessage()
+            ->set('app_ref', $appRef)
+            ->set('content_ref', $contentRef)
+            ->set('send_status', NotificationSendStatus::SCHEDULED())
+            ->set('count', 1);
+
+        /** @var Message $response */
+        $response = $event::getPbjx()->copyContext($event->getMessage(), $request)->request($request);
+
+        if ($response->has('nodes')) {
+            throw new NotificationAlreadyScheduled();
         }
     }
 }
