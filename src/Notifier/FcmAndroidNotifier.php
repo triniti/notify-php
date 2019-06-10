@@ -6,27 +6,19 @@ namespace Triniti\Notify\Notifier;
 use Gdbots\Pbj\Message;
 use Gdbots\Schemas\Ncr\NodeRef;
 
-class AzureAndroidNotifier extends AbstractAzureNotifier
+class FcmAndroidNotifier extends AbstractFcmNotifier
 {
-    const DISABLED_FLAG_NAME = 'azure_android_notifier_disabled';
-    const FORMAT = 'gcm';
+    const DISABLED_FLAG_NAME = 'fcm_android_notifier_disabled';
 
     /**
-     * @link https://developers.google.com/cloud-messaging/concept-options#notifications_and_data_messages
-     *
      * {@inheritdoc}
      */
     protected function buildPayload(Message $notification, Message $app, ?Message $content = null): array
     {
-        $msg = null !== $content ? $content->get('title') : $notification->get('title');
-        $payload = [
-            'notification' => [
-                'title' => $notification->get('body', $msg),
-            ],
-            'data'         => [
-                'msg'              => $notification->get('body', $msg),
-                'notification_ref' => NodeRef::fromNode($notification)->toString(),
-            ],
+        $payload = parent::buildPayload($notification, $app, $content);
+        $payload['data'] = [
+            'msg'              => $payload['notification']['title'],
+            'notification_ref' => NodeRef::fromNode($notification)->toString(),
         ];
 
         if (null !== $content) {

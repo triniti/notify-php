@@ -202,12 +202,13 @@ class SendGridEmailNotifier implements Notifier
     {
         try {
             $response = $this->getGuzzleClient()->post("campaigns/{$id}/schedules/now");
+            $httpCode = $response->getStatusCode();
             $content = (string)$response->getBody()->getContents();
 
             return [
-                'ok'           => HttpCode::HTTP_CREATED === $response->getStatusCode(),
-                'code'         => StatusCodeConverter::httpToVendor($response->getStatusCode()),
-                'http_code'    => $response->getStatusCode(),
+                'ok'           => HttpCode::HTTP_CREATED === $httpCode,
+                'code'         => StatusCodeConverter::httpToVendor($httpCode),
+                'http_code'    => $httpCode,
                 'raw_response' => $content,
                 'response'     => json_decode($content, true),
             ];

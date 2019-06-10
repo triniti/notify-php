@@ -38,7 +38,7 @@ services:
     #bind:
     #  $logger: '@monolog.logger.notify'
 
-  # todo: implement the notifiers
+  # todo: implement alexa, browser, slack and sms notifiers
   acme_notify.alexa_notifier: '@Triniti\Notify\Notifier\AlexaNotifier'
   acme_notify.android_notifier: '@Triniti\Notify\Notifier\AndroidNotifier'
   acme_notify.apple_news_notifier: '@Triniti\Notify\Notifier\AppleNewsNotifier'

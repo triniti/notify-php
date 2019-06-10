@@ -6,16 +6,16 @@
   "require": {
     "php": ">=7.1",
     "defuse/php-encryption": "^2.2",
-    "gdbots/ncr": "~0.3",
+    "gdbots/ncr": "^1.0",
     "guzzlehttp/guzzle": "^6.2.1",
-    "triniti/apple-news": "~0.1",
-    "triniti/sys": "~0.1"
+    "triniti/apple-news": "^1.0",
+    "triniti/sys": "^1.0"
   },
   "require-dev": {
     "phpunit/phpunit": "^6.4",
     "symfony/dependency-injection": "^4.1",
-    "triniti/acme-schemas": "~0.10",
-    "twig/twig": "^2.4"
+    "triniti/acme-schemas": "^1.0",
+    "twig/twig": "^2.7"
   },
   "autoload": {
     "psr-4": {

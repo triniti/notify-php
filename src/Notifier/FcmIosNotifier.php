@@ -6,10 +6,9 @@ namespace Triniti\Notify\Notifier;
 use Gdbots\Pbj\Message;
 use Gdbots\Schemas\Ncr\NodeRef;
 
-class AzureIosNotifier extends AbstractAzureNotifier
+class FcmIosNotifier extends AbstractFcmNotifier
 {
-    const DISABLED_FLAG_NAME = 'azure_ios_notifier_disabled';
-    const FORMAT = 'apple';
+    const DISABLED_FLAG_NAME = 'fcm_ios_notifier_disabled';
 
     /**
      * @link https://developer.apple.com/library/archive/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CreatingtheNotificationPayload.html
@@ -18,18 +17,13 @@ class AzureIosNotifier extends AbstractAzureNotifier
      */
     protected function buildPayload(Message $notification, Message $app, ?Message $content = null): array
     {
-        $alert = null !== $content ? $content->get('title') : $notification->get('title');
-        $payload = [
-            'notification'     => [
-                'title' => $notification->get('body', $alert),
-            ],
-            'aps'              => [
-                'alert'             => $notification->get('body', $alert),
-                'category'          => 'COMMENT_SNOOZE',
-                'content-available' => 1,
-            ],
-            'notification_ref' => NodeRef::fromNode($notification)->toString(),
+        $payload = parent::buildPayload($notification, $app, $content);
+        $payload['aps'] = [
+            'alert'             => $payload['notification']['title'],
+            'category'          => 'COMMENT_SNOOZE',
+            'content-available' => 1,
         ];
+        $payload['notification_ref'] = NodeRef::fromNode($notification)->toString();
 
         if (null !== $content) {
             $contentRef = NodeRef::fromNode($content);

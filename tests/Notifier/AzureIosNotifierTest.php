@@ -43,17 +43,6 @@ class AzureIosNotifierTest extends AbstractPbjxTest
         $this->key = Key::createNewRandomKey();
         $this->notifier = new class($this->flags, $this->key) extends AzureIosNotifier
         {
-            public function __construct(Flags $flags, Key $key)
-            {
-                parent::__construct($flags, $key);
-                $this->parseConnectionString(AzureIosNotifierTest::CONNECTION_STRING);
-            }
-
-            public function parseConnectionString(string $connectionString): void
-            {
-                parent::parseConnectionString($connectionString);
-            }
-
             /**
              * @return string
              */
@@ -86,9 +75,12 @@ class AzureIosNotifierTest extends AbstractPbjxTest
                 return $this->sasKeyValue;
             }
 
+            /**
+             * {@inheritdoc}
+             */
             protected function getGuzzleClient(): GuzzleClient
             {
-                $location = $this->getEndpoint().$this->getHubName().'/messages/123'.self::API_VERSION;
+                $location = $this->getEndpoint() . $this->getHubName() . '/messages/123' . self::API_VERSION;
                 $mock = new MockHandler(
                     [
                         new Response(201, ['Location' => $location]),
@@ -114,13 +106,6 @@ class AzureIosNotifierTest extends AbstractPbjxTest
         };
     }
 
-    public function testParseConnectionString()
-    {
-        $this->assertEquals('https://endpoint/', $this->notifier->getEndpoint());
-        $this->assertEquals('keyName', $this->notifier->getSasKeyName());
-        $this->assertEquals('keyValue', $this->notifier->getSasKeyValue());
-    }
-
     public function testSendWithIosFlagDisabled()
     {
         $flagset = FlagsetV1::fromArray(
@@ -133,8 +118,57 @@ class AzureIosNotifierTest extends AbstractPbjxTest
         $this->notifier->setFlags(new Flags($this->ncr, 'acme:flagset:ios'));
         $result = $this->notifier->send($this->getNotification(), $this->getApp(), $this->getContent());
 
-        $this->assertFalse($result->get('ok'));
-        $this->assertSame(Code::CANCELLED, $result->get('code'));
+        $this->assertFalse($result->get('ok'), 'notifications are cancelled when flag is disabled');
+        $this->assertSame(Code::CANCELLED, $result->get('code'), 'code must be set to cancelled when flag is disabled');
+    }
+
+    public function testSendWithOutAzureNotificationHubConnectionField()
+    {
+        $app = $this->getApp()->clear('azure_notification_hub_connection');
+        $result = $this->notifier->send($this->getNotification(), $app, $this->getContent());
+        $this->assertFalse($result->get('ok'), 'notifications are not sent when all the required fields are not set');
+        $this->assertSame(
+            Code::INVALID_ARGUMENT,
+            $result->get('code'),
+            'code must be set to invalid argument when all the required notification fields are not set'
+        );
+    }
+
+    public function testSendWithOutAzureNotificationHubNameField()
+    {
+        $app = $this->getApp()->clear('azure_notification_hub_name');
+        $result = $this->notifier->send($this->getNotification(), $app, $this->getContent());
+        $this->assertFalse($result->get('ok'), 'notifications are not sent when all the required fields are not set');
+        $this->assertSame(
+            Code::INVALID_ARGUMENT,
+            $result->get('code'),
+            'code must be set to invalid argument when all the required notification fields are not set'
+        );
+    }
+
+    /**
+     * Notifications can be sent without a content-ref, payload uses notification body field
+     */
+    public function testSendWithoutContent()
+    {
+        $result = $this->notifier->send($this->getNotification(), $this->getApp());
+        $this->assertTrue($result->get('ok'), 'notifications can be sent without content');
+        $this->assertSame(
+            '123',
+            $result->getFromMap('tags', 'azure_notification_id'),
+            'azure_notification_id must match'
+        );
+    }
+
+    public function testSend()
+    {
+        $result = $this->notifier->send($this->getNotification(), $this->getApp(), $this->getContent());
+        $this->assertTrue($result->get('ok'), 'notification must be successfully sent');
+        $this->assertSame(
+            '123',
+            $result->getFromMap('tags', 'azure_notification_id'),
+            'azure_notification_id must match'
+        );
     }
 
     /**
@@ -143,8 +177,7 @@ class AzureIosNotifierTest extends AbstractPbjxTest
     protected function getNotification(): IosNotificationV1
     {
         return IosNotificationV1::create()
-            ->set('title', 'Nipsey Hussle Memorial Service Free Tickets Up for Grabs Tuesday')
-            ->set('body', 'Body of the notification');
+            ->set('title', 'Title of the notification');
     }
 
     /**
@@ -168,39 +201,11 @@ class AzureIosNotifierTest extends AbstractPbjxTest
      */
     protected function getContent(): ArticleV1
     {
-        return ArticleV1::fromArray(['_id' => '5c9cc362-5a4b-11e9-9606-30342d323838']);
-    }
-
-    public function testSendWithOutAzureNotificationHubConnectionField()
-    {
-        $app = $this->getApp()->clear('azure_notification_hub_connection');
-        $result = $this->notifier->send($this->getNotification(), $app, $this->getContent());
-        $this->assertFalse($result->get('ok'));
-        $this->assertSame(Code::INVALID_ARGUMENT, $result->get('code'));
-    }
-
-    public function testSendWithOutAzureNotificationHubNameField()
-    {
-        $app = $this->getApp()->clear('azure_notification_hub_name');
-        $result = $this->notifier->send($this->getNotification(), $app, $this->getContent());
-        $this->assertFalse($result->get('ok'));
-        $this->assertSame(Code::INVALID_ARGUMENT, $result->get('code'));
-    }
-
-    /**
-     * Notifications can be sent without a content-ref, payload uses notification body field
-     */
-    public function testSendWithoutContent()
-    {
-        $result = $this->notifier->send($this->getNotification(), $this->getApp());
-        $this->assertTrue($result->get('ok'));
-        $this->assertSame('123', $result->getFromMap('tags', 'azure_notification_id'));
-    }
-
-    public function testSend()
-    {
-        $result = $this->notifier->send($this->getNotification(), $this->getApp(), $this->getContent());
-        $this->assertTrue($result->get('ok'));
-        $this->assertSame('123', $result->getFromMap('tags', 'azure_notification_id'));
+        return ArticleV1::fromArray(
+            [
+                '_id'   => '5c9cc362-5a4b-11e9-9606-30342d323838',
+                'title' => 'Article title',
+            ]
+        );
     }
 }
