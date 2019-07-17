@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 1.x versions.
 
 
+## v1.0.2
+* In `NcrNotificationProjector::createSendNotificationJob` make sure send at is for sure in the future.
+
+
 ## v1.0.1
 * In `NotificationValidator::ensureNotAlreadyScheduled` also ensure that apple news notifications are included in this check.
 * In `NcrNotificationProjector::createSendNotificationJob` always use `pbjx->sendAt(...)` so the sending of the job is async.
