@@ -154,13 +154,8 @@ class NcrNotificationProjector extends AbstractNodeProjector implements EventSub
 
         $command = $this->createSendNotification($node, $event, $pbjx)->set('node_ref', $nodeRef);
         $pbjx->copyContext($event, $command);
-
-        if ($sendAt->getTimestamp() <= (time() + 5)) {
-            $pbjx->send($command);
-            return;
-        }
-
-        $pbjx->sendAt($command, $sendAt->getTimestamp(), "{$nodeRef}.send");
+        $timestamp = $sendAt->getTimestamp() + 5;
+        $pbjx->sendAt($command, $timestamp, "{$nodeRef}.send");
     }
 
     /**

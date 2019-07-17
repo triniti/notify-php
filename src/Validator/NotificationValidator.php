@@ -114,10 +114,6 @@ class NotificationValidator implements EventSubscriber, PbjxValidator
      */
     protected function ensureNotAlreadyScheduled(PbjxEvent $event, Message $notification): void
     {
-        if ($notification instanceof AppleNewsNotification && 'notification' !== $notification->get('apple_news_operation')) {
-            return;
-        }
-
         /** @var NodeRef $appRef */
         $appRef = $notification->get('app_ref');
 
