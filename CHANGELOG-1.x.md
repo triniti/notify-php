@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 1.x versions.
 
 
+## v1.0.3
+* In `AppleNewsNotifier` add retry with most recent revision token if initial request had stale revision token.
+
+
 ## v1.0.2
 * In `NcrNotificationProjector::createSendNotificationJob` make sure send at is for sure in the future.
 

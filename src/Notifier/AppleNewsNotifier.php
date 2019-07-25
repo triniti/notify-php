@@ -8,6 +8,7 @@ use Defuse\Crypto\Key;
 use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Common\Util\StringUtils;
 use Gdbots\Pbj\Message;
+use Gdbots\Pbjx\Pbjx;
 use Gdbots\Schemas\Iam\Mixin\App\App;
 use Gdbots\Schemas\Pbjx\Enum\Code;
 use Triniti\AppleNews\AppleNewsApi;
@@ -15,8 +16,11 @@ use Triniti\AppleNews\ArticleDocumentMarshaler;
 use Triniti\Notify\Exception\InvalidNotificationContent;
 use Triniti\Notify\Exception\RequiredFieldNotSet;
 use Triniti\Notify\Notifier;
+use Triniti\Schemas\Notify\Enum\NotificationSendStatus;
+use Triniti\Schemas\Notify\Enum\SearchNotificationsSort;
 use Triniti\Schemas\Notify\Mixin\HasNotifications\HasNotifications;
 use Triniti\Schemas\Notify\Mixin\Notification\Notification;
+use Triniti\Schemas\Notify\Mixin\SearchNotificationsRequest\SearchNotificationsRequestV1Mixin;
 use Triniti\Schemas\Notify\NotifierResult;
 use Triniti\Schemas\Notify\NotifierResultV1;
 use Triniti\Sys\Flags;
@@ -29,6 +33,9 @@ class AppleNewsNotifier implements Notifier
     /** @var Key */
     protected $key;
 
+    /** @var Pbjx */
+    protected $pbjx;
+
     /** @var ArticleDocumentMarshaler */
     protected $marshaler;
 
@@ -38,12 +45,14 @@ class AppleNewsNotifier implements Notifier
     /**
      * @param Flags                    $flags
      * @param Key                      $key
+     * @param Pbjx                     $pbjx
      * @param ArticleDocumentMarshaler $marshaler
      */
-    public function __construct(Flags $flags, Key $key, ArticleDocumentMarshaler $marshaler)
+    public function __construct(Flags $flags, Key $key, Pbjx $pbjx, ArticleDocumentMarshaler $marshaler)
     {
         $this->flags = $flags;
         $this->key = $key;
+        $this->pbjx = $pbjx;
         $this->marshaler = $marshaler;
     }
 
@@ -172,8 +181,26 @@ class AppleNewsNotifier implements Notifier
         }
 
         $document = $this->marshaler->marshal($article);
-        return $this->api->updateArticle((string)$article->get('apple_news_id'), $document, [
+        $result = $this->api->updateArticle((string)$article->get('apple_news_id'), $document, [
             'revision' => $article->get('apple_news_revision'),
+        ]);
+
+        if ($result['ok']) {
+            return $result;
+        }
+
+        $code = $result['response']['errors'][0]['code'] ?? null;
+        if ('WRONG_REVISION' !== $code) {
+            return $result;
+        }
+
+        $latestRevision = $this->getLatestRevision($notification);
+        if (null === $latestRevision || $article->get('apple_news_revision') === $latestRevision) {
+            return $result;
+        }
+
+        return $this->api->updateArticle((string)$article->get('apple_news_id'), $document, [
+            'revision' => $latestRevision,
         ]);
     }
 
@@ -204,5 +231,33 @@ class AppleNewsNotifier implements Notifier
             $app->get('api_key'),
             Crypto::decrypt($app->get('api_secret'), $this->key)
         );
+    }
+
+    /**
+     * @param Message $notification
+     *
+     * @return string
+     */
+    protected function getLatestRevision(Message $notification): ?string
+    {
+        $request = SearchNotificationsRequestV1Mixin::findOne()->createMessage()
+            ->addToSet('types', ['apple-news-notification'])
+            ->set('q', '+apple_news_operation:(update OR create)')
+            ->set('send_status', NotificationSendStatus::SENT())
+            ->set('app_ref', $notification->get('app_ref'))
+            ->set('content_ref', $notification->get('content_ref'))
+            ->set('ctx_causator_ref', $notification->generateMessageRef())
+            ->set('count', 1)
+            ->set('sort', SearchNotificationsSort::SENT_AT_DESC());
+
+        $response = $this->pbjx->request($request);
+        if (!$response->has('nodes')) {
+            return null;
+        }
+
+        /** @var Message $result */
+        $result = $response->getFromListAt('nodes', 0)->get('notifier_result');
+        $revision = $result->getFromMap('tags', 'apple_news_revision');
+        return $revision ? StringUtils::urlsafeB64Decode($revision) : $revision;
     }
 }
