@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 1.x versions.
 
 
+## v1.0.4
+* Add `FcmBrowserNotifier` for web app notifications.
+
+
 ## v1.0.3
 * In `AppleNewsNotifier` add retry with most recent revision token if initial request had stale revision token.
 

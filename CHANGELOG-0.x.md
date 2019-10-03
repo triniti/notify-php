@@ -25,7 +25,7 @@ This changelog references the relevant changes done in 0.x versions.
 
 
 ## v0.2.4
-* When `HasNotificationsWatcher::scheduleNotification` runs, clone the nodes we get back from search to ensure nothing else is referencing the values we're about to mutate. 
+* When `HasNotificationsWatcher::scheduleNotification` runs, clone the nodes we get back from search to ensure nothing else is referencing the values we're about to mutate.
 
 
 ## v0.2.3
