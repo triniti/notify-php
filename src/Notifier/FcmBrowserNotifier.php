@@ -22,20 +22,14 @@ class FcmBrowserNotifier extends AbstractFcmNotifier
         ];
 
         if (null !== $content) {
-            $contentRef = NodeRef::fromNode($content);
-            // fixme: we can only use one payload type, either data or webPush
-            $payload['data']['node_ref'] = $contentRef->toString();
+            $payload['data']['node_ref'] = NodeRef::fromNode($content)->toString();
             $url = UriTemplateService::expand(
                 "{$content::schema()->getQName()}.canonical",
                 $content->getUriTemplateVars()
             );
 
             if (!empty($url)) {
-                $payload['webpush'] = [
-                    'fcm_options' => [
-                        'link' => $url,
-                    ],
-                ];
+                $payload['notification'] = ['click_action' => $url];
             }
         }
 
