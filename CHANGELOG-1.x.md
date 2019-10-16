@@ -2,8 +2,12 @@
 This changelog references the relevant changes done in 1.x versions.
 
 
+## v1.0.6
+* Add `fcm_options` with `analytics_label` value to notifications payload in `AbstractFcmNotifier`.
+
+
 ## v1.0.5
-* add `click_action` to and remove `webpush` from the payload in `FcmBrowserNotifier`
+* Add `click_action` to and remove `webpush` from the payload in `FcmBrowserNotifier`.
 
 
 ## v1.0.4

@@ -79,6 +79,7 @@ abstract class AbstractFcmNotifier implements Notifier
             }
         } catch (\Throwable $e) {
             $code = $e->getCode() > 0 ? $e->getCode() : Code::UNKNOWN;
+
             return NotifierResultV1::create()
                 ->set('ok', false)
                 ->set('code', $code)
@@ -115,6 +116,9 @@ abstract class AbstractFcmNotifier implements Notifier
         $payload = [
             'notification' => [
                 'title' => $notification->get('body', $title),
+            ],
+            'fcm_options'  => [
+                'analytics_label' => $notification->get('_id')->toString(),
             ],
         ];
 
