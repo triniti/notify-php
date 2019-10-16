@@ -29,7 +29,10 @@ class FcmBrowserNotifier extends AbstractFcmNotifier
             );
 
             if (!empty($url)) {
-                $payload['notification'] = ['click_action' => $url];
+                if (!isset($payload['notification'])) {
+                    $payload['notification'] = [];
+                }
+                $payload['notification']['click_action'] = $url;
             }
         }
 

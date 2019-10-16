@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 1.x versions.
 
 
+## v1.0.7
+* Fix for notification value override issue in the browser notification payload.  
+
+
 ## v1.0.6
 * Add `fcm_options` with `analytics_label` value to notifications payload in `AbstractFcmNotifier`.
 
