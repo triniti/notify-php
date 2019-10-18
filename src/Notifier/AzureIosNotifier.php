@@ -24,9 +24,9 @@ class AzureIosNotifier extends AbstractAzureNotifier
                 'title' => $notification->get('body', $alert),
             ],
             'aps'              => [
-                'alert'             => $notification->get('body', $alert),
-                'category'          => 'COMMENT_SNOOZE',
-                'content-available' => 1,
+                'alert'           => $notification->get('body', $alert),
+                'category'        => 'COMMENT_SNOOZE',
+                'mutable-content' => 1,
             ],
             'notification_ref' => NodeRef::fromNode($notification)->toString(),
         ];

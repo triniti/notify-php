@@ -19,9 +19,9 @@ class FcmIosNotifier extends AbstractFcmNotifier
     {
         $payload = parent::buildPayload($notification, $app, $content);
         $payload['aps'] = [
-            'alert'             => $payload['notification']['title'],
-            'category'          => 'COMMENT_SNOOZE',
-            'content-available' => 1,
+            'alert'           => $payload['notification']['title'],
+            'category'        => 'COMMENT_SNOOZE',
+            'mutable-content' => 1,
         ];
         $payload['notification_ref'] = NodeRef::fromNode($notification)->toString();
 
