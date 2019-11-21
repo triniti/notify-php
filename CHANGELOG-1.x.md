@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 1.x versions.
 
 
+## v1.0.9
+* Retry notification up to 3 times in `SendNotificationHandler`.
+
+
 ## v1.0.8
 * Change `content-available` to `mutable-content` in aps payload in `AzureIosNotifier` and `FcmIosNotifier` for mutable notification, see https://developer.apple.com/library/archive/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/ModifyingNotifications.html. 
 

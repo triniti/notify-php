@@ -11,6 +11,7 @@ use Gdbots\Schemas\Iam\Mixin\App\App;
 use Gdbots\Schemas\Ncr\Enum\NodeStatus;
 use Gdbots\Schemas\Ncr\NodeRef;
 use Gdbots\Schemas\Pbjx\Enum\Code;
+use Triniti\Schemas\Notify\Enum\NotificationSendStatus;
 use Triniti\Schemas\Notify\Mixin\HasNotifications\HasNotifications;
 use Triniti\Schemas\Notify\Mixin\Notification\Notification;
 use Triniti\Schemas\Notify\Mixin\NotificationFailed\NotificationFailed;
@@ -62,6 +63,10 @@ class SendNotificationHandler extends AbstractNodeCommandHandler
             throw $e;
         }
 
+        if (!$notification->get('send_status')->equals(NotificationSendStatus::SCHEDULED())) {
+            return;
+        }
+
         $this->assertIsNodeSupported($notification);
 
         /** @var NodeRef $appRef */
@@ -110,8 +115,27 @@ class SendNotificationHandler extends AbstractNodeCommandHandler
             $result = $notifer->send($notification, $app, $content);
         }
 
+        $retryCodes = [
+            Code::ABORTED            => true,
+            Code::DEADLINE_EXCEEDED  => true,
+            Code::INTERNAL           => true,
+            Code::RESOURCE_EXHAUSTED => true,
+            Code::UNAVAILABLE        => true,
+            Code::UNKNOWN            => true,
+        ];
+
         if ($result->get('ok')) {
             $event = $this->createNotificationSent($command, $pbjx, $notification, $result, $app, $content);
+
+        } elseif ($command->get('ctx_retries') < 3 && isset($retryCodes[$result->get('code')])) {
+            // reschedule notification if service is down.
+            $newCommand = clone $command;
+            $retries = $newCommand->get('ctx_retries') + 1;
+            $timestamp = strtotime('+' . (120 * $retries) . ' seconds');
+            $newCommand->set('ctx_retries', $retries);
+            $pbjx->sendAt($newCommand, $timestamp, "{$nodeRef}.send");
+            return;
+
         } else {
             $event = $this->createNotificationFailed($command, $pbjx, $notification, $result, $app, $content);
         }
