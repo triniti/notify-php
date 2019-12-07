@@ -133,6 +133,7 @@ class SendNotificationHandler extends AbstractNodeCommandHandler
             $retries = $newCommand->get('ctx_retries') + 1;
             $timestamp = strtotime('+' . (120 * $retries) . ' seconds');
             $newCommand->set('ctx_retries', $retries);
+            $pbjx->copyContext($command, $newCommand);
             $pbjx->sendAt($newCommand, $timestamp, "{$nodeRef}.send");
             return;
 

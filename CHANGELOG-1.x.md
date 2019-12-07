@@ -2,16 +2,20 @@
 This changelog references the relevant changes done in 1.x versions.
 
 
+## v1.0.10
+* Copy context to new scheduled command in `SendNotificationHandler`.
+
+
 ## v1.0.9
 * Retry notification up to 3 times in `SendNotificationHandler`.
 
 
 ## v1.0.8
-* Change `content-available` to `mutable-content` in aps payload in `AzureIosNotifier` and `FcmIosNotifier` for mutable notification, see https://developer.apple.com/library/archive/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/ModifyingNotifications.html. 
+* Change `content-available` to `mutable-content` in aps payload in `AzureIosNotifier` and `FcmIosNotifier` for mutable notification, see https://developer.apple.com/library/archive/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/ModifyingNotifications.html.
 
 
 ## v1.0.7
-* Fix for notification value override issue in the browser notification payload.  
+* Fix for notification value override issue in the browser notification payload.
 
 
 ## v1.0.6
