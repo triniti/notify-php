@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 1.x versions.
 
 
+## v1.0.11
+* Add the data fields to the data key in `FcmIosNotifier` payload
+
+
 ## v1.0.10
 * Copy context to new scheduled command in `SendNotificationHandler`.
 

@@ -114,7 +114,7 @@ class FcmIosNotifierTest extends AbstractPbjxTest
         return IosNotificationV1::create()
             ->set('title', 'Title of the notification')
             ->set('body', 'Body of the notification')
-            ->addToSet('fcm_topics', ['weather', 'sports']);
+            ->addToSet('fcm_topics', ['ios-all']);
     }
 
     /**
