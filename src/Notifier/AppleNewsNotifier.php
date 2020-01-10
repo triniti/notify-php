@@ -7,6 +7,7 @@ use Defuse\Crypto\Crypto;
 use Defuse\Crypto\Key;
 use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Common\Util\StringUtils;
+use Gdbots\Ncr\Ncr;
 use Gdbots\Pbj\Message;
 use Gdbots\Pbjx\Pbjx;
 use Gdbots\Schemas\Iam\Mixin\App\App;
@@ -42,18 +43,23 @@ class AppleNewsNotifier implements Notifier
     /** @var AppleNewsApi */
     protected $api;
 
+    /** @var Ncr */
+    protected $ncr;
+
     /**
      * @param Flags                    $flags
      * @param Key                      $key
      * @param Pbjx                     $pbjx
      * @param ArticleDocumentMarshaler $marshaler
+     * @param Ncr                      $ncr
      */
-    public function __construct(Flags $flags, Key $key, Pbjx $pbjx, ArticleDocumentMarshaler $marshaler)
+    public function __construct(Flags $flags, Key $key, Pbjx $pbjx, ArticleDocumentMarshaler $marshaler, Ncr $ncr)
     {
         $this->flags = $flags;
         $this->key = $key;
         $this->pbjx = $pbjx;
         $this->marshaler = $marshaler;
+        $this->ncr = $ncr;
     }
 
     /**
@@ -160,7 +166,8 @@ class AppleNewsNotifier implements Notifier
         }
 
         $document = $this->marshaler->marshal($article);
-        return $this->api->createArticle($app->get('channel_id'), $document);
+        $metadata = $this->createArticleMetadata($article);
+        return $this->api->createArticle($app->get('channel_id'), $document, $metadata);
     }
 
     /**
@@ -181,9 +188,9 @@ class AppleNewsNotifier implements Notifier
         }
 
         $document = $this->marshaler->marshal($article);
-        $result = $this->api->updateArticle((string)$article->get('apple_news_id'), $document, [
-            'revision' => $article->get('apple_news_revision'),
-        ]);
+        $metadata = $this->createArticleMetadata($article);
+        $metadata['revision'] = $article->get('apple_news_revision');
+        $result = $this->api->updateArticle((string)$article->get('apple_news_id'), $document, $metadata);
 
         if ($result['ok']) {
             return $result;
@@ -199,9 +206,8 @@ class AppleNewsNotifier implements Notifier
             return $result;
         }
 
-        return $this->api->updateArticle((string)$article->get('apple_news_id'), $document, [
-            'revision' => $latestRevision,
-        ]);
+        $metadata['revision'] = $latestRevision;
+        return $this->api->updateArticle((string)$article->get('apple_news_id'), $document, $metadata);
     }
 
     /**
@@ -259,5 +265,55 @@ class AppleNewsNotifier implements Notifier
         $result = $response->getFromListAt('nodes', 0)->get('notifier_result');
         $revision = $result->getFromMap('tags', 'apple_news_revision');
         return $revision ? StringUtils::urlsafeB64Decode($revision) : $revision;
+    }
+
+    /**
+     * @param Message $article
+     *
+     * @return array
+     */
+    protected function createArticleMetadata(Message $article): array
+    {
+        $sections = $this->createArticleSections($article);
+        if (empty($sections)) {
+            return [];
+        }
+
+        return [
+            'links' => [
+                'sections' => $sections,
+            ],
+        ];
+    }
+
+    /**
+     * @param Message $article
+     *
+     * @return string[]
+     */
+    protected function createArticleSections(Message $article): array
+    {
+        $sections = [];
+        $defaultSection = $this->flags->getString('apple_news_default_section_url');
+        if ('' !== $defaultSection && $article->get('is_homepage_news')) {
+            $sections[] = $defaultSection;
+        }
+
+        if (!$article->has('channel_ref')) {
+            return $sections;
+        }
+
+        try {
+            $channel = $this->ncr->getNode($article->get('channel_ref'));
+        } catch (\Throwable $e) {
+            return $sections;
+        }
+
+        if (!$channel->isInMap('tags', 'apple_news_section_url')) {
+            return $sections;
+        }
+
+        $sections[] = $channel->getFromMap('tags', 'apple_news_section_url');
+        return $sections;
     }
 }

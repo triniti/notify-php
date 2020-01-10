@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 1.x versions.
 
 
+## v1.1.0
+* Add support for Custom Sections in Apple News, ref https://support.apple.com/guide/news-publisher/add-and-manage-sections-apdfc6a051aa/icloud.
+
+
 ## v1.0.11
 * Add the data fields to the data key in `FcmIosNotifier` payload
 
