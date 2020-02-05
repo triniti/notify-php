@@ -87,6 +87,16 @@ class FcmIosNotifierTest extends AbstractPbjxTest
         );
     }
 
+    public function testSendWithNotificationBody()
+    {
+        $result = $this->notifier->send(
+            $this->getNotificationWithBody(),
+            $this->getApp(),
+            $this->getContent()
+        );
+        $this->assertTrue($result->get('ok'), 'notification must be sent successfully when FCM topics are set');
+    }
+
     public function testSendWithTopics()
     {
         $result = $this->notifier->send(
@@ -109,11 +119,20 @@ class FcmIosNotifierTest extends AbstractPbjxTest
     /**
      * @return IosNotificationV1
      */
+    protected function getNotificationWithBody(): IosNotificationV1
+    {
+        return IosNotificationV1::create()
+            ->set('title', 'Title of the notification')
+            ->set('body', 'Body of the notification');
+    }
+
+    /**
+     * @return IosNotificationV1
+     */
     protected function getNotificationWithTopics(): IosNotificationV1
     {
         return IosNotificationV1::create()
             ->set('title', 'Title of the notification')
-            ->set('body', 'Body of the notification')
             ->addToSet('fcm_topics', ['ios-all']);
     }
 

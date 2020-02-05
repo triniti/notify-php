@@ -87,6 +87,16 @@ class FcmAndroidNotifierTest extends AbstractPbjxTest
         );
     }
 
+    public function testSendWithNotificationBody()
+    {
+        $result = $this->notifier->send(
+            $this->getNotificationWithBody(),
+            $this->getApp(),
+            $this->getContent()
+        );
+        $this->assertTrue($result->get('ok'), 'notification must be sent successfully when FCM topics are set');
+    }
+
     public function testSendWithTopics()
     {
         $result = $this->notifier->send(
@@ -109,12 +119,21 @@ class FcmAndroidNotifierTest extends AbstractPbjxTest
     /**
      * @return AndroidNotificationV1
      */
+    protected function getNotificationWithBody(): AndroidNotificationV1
+    {
+        return AndroidNotificationV1::create()
+            ->set('title', 'Title of the notification')
+            ->set('body', 'Body of the notification');
+    }
+
+    /**
+     * @return AndroidNotificationV1
+     */
     protected function getNotificationWithTopics(): AndroidNotificationV1
     {
         return AndroidNotificationV1::create()
             ->set('title', 'Title of the notification')
-            ->set('body', 'Body of the notification')
-            ->addToSet('fcm_topics', ['weather', 'sports']);
+            ->addToSet('fcm_topics', ['android-all']);
     }
 
     /**

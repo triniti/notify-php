@@ -115,12 +115,16 @@ abstract class AbstractFcmNotifier implements Notifier
         $title = null !== $content ? $content->get('title') : $notification->get('title');
         $payload = [
             'notification' => [
-                'title' => $notification->get('body', $title),
+                'body' => $notification->get('body', $title),
             ],
             'fcm_options'  => [
                 'analytics_label' => $notification->get('_id')->toString(),
             ],
         ];
+
+        if ($notification->has('body') && $notification->get('body') !== $title) {
+            $payload['notification']['title'] = $title;
+        }
 
         $topics = $notification->get('fcm_topics');
         if (empty($topics)) {

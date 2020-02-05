@@ -17,7 +17,7 @@ class FcmAndroidNotifier extends AbstractFcmNotifier
     {
         $payload = parent::buildPayload($notification, $app, $content);
         $payload['data'] = [
-            'msg'              => $payload['notification']['title'],
+            'msg'              => $payload['notification']['body'],
             'notification_ref' => NodeRef::fromNode($notification)->toString(),
         ];
 

@@ -2,6 +2,10 @@
 This changelog references the relevant changes done in 1.x versions.
 
 
+## v1.1.1
+* Update `AbstractFcmNotifier::buildPayload` to set the notification title in the payload only when there is a notification-body.
+
+
 ## v1.1.0
 * Add support for Custom Sections in Apple News, ref https://support.apple.com/guide/news-publisher/add-and-manage-sections-apdfc6a051aa/icloud.
 
