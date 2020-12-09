@@ -23,13 +23,58 @@ class NotificationAggregate extends Aggregate
             ->clear('sent_at')
             ->set('status', NodeStatus::PUBLISHED());
 
-        if (
-            !$node->has('send_at')
-            && $node->has('content_ref')
-            && $node->get('send_on_publish')
+        $this->applySchedule($node);
+    }
+
+    protected function enrichNodeUpdated(Message $event): void
+    {
+        parent::enrichNodeUpdated($event);
+
+        /** @var Message $oldNode */
+        $oldNode = $event->get('old_node');
+
+        /** @var Message $newNode */
+        $newNode = $event->get('new_node');
+
+        $newNode
+            // app_ref SHOULD NOT change during an update
+            ->set('app_ref', $oldNode->get('app_ref'))
+            // content_ref SHOULD NOT change during an update
+            ->set('content_ref', $oldNode->get('content_ref'))
+            // send_status SHOULD NOT change during an update by
+            // a user action, it MAY change when scheduling is applied
+            ->set('send_status', $oldNode->get('send_status'))
+            // sent_at SHOULD NOT change during an update,
+            // it is updated when notifications are sent
+            ->set('sent_at', $oldNode->get('sent_at'));
+
+        // notifications are only published or deleted, enforce it.
+        if (!NodeStatus::DELETED()->equals($newNode->get('status'))) {
+            $newNode->set('status', NodeStatus::PUBLISHED());
+        }
+
+        $this->applySchedule($newNode, false);
+    }
+
+    /**
+     * @param Message $notification
+     * @param bool    $updateStatus
+     *
+     * @throws InvalidNotificationContent
+     */
+    protected function applySchedule(Message $notification, bool $updateStatus = true): void
+    {
+        if ($this->alreadySent($notification)) {
+            // schedule cannot change at this point.
+            return;
+        }
+
+        if (!$notification->has('send_at')
+            && $notification->has('content_ref')
+            && $notification->get('send_on_publish')
         ) {
             /** @var NodeRef $contentRef */
-            $contentRef = $node->get('content_ref');
+            $contentRef = $notification->get('content_ref');
             $aggregate = AggregateResolver::resolve($contentRef->getQName())::fromNodeRef($contentRef, $this->pbjx);
             $aggregate->sync();
             $content = $aggregate->getNode();
@@ -41,18 +86,36 @@ class NotificationAggregate extends Aggregate
                 throw new InvalidNotificationContent();
             }
 
-            $node->set('title', $content->get('title'));
+            $notification->set('title', $content->get('title'));
             if ($content->has('published_at')) {
                 $sendAt = clone $content->get('published_at');
-                $node->set('send_at', $sendAt->modify('+10 seconds'));
+                $notification->set('send_at', $sendAt->modify('+10 seconds'));
             }
         }
 
-        if ($node->has('send_at')) {
-            $node->set('send_status', NotificationSendStatus::SCHEDULED());
-        } else {
-            $node->set('send_status', NotificationSendStatus::DRAFT());
+        if ($updateStatus) {
+            if ($notification->has('send_at')) {
+                $notification->set('send_status', NotificationSendStatus::SCHEDULED());
+            } else {
+                $notification->set('send_status', NotificationSendStatus::DRAFT());
+            }
         }
+    }
+
+    protected function alreadySent(Message $notification): bool
+    {
+        /** @var NotificationSendStatus $status */
+        $status = $notification->get('send_status', NotificationSendStatus::DRAFT());
+
+        if (
+            $status->equals(NotificationSendStatus::SENT())
+            || $status->equals(NotificationSendStatus::FAILED())
+            || $status->equals(NotificationSendStatus::CANCELED())
+        ) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
