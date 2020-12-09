@@ -23,7 +23,7 @@ use Triniti\Tests\Notify\MockNcrSearch;
 
 class NotificationValidatorTest extends AbstractPbjxTest
 {
-    public function setup()
+    public function setup(): void
     {
         parent::setup();
 

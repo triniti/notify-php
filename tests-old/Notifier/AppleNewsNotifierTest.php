@@ -42,7 +42,7 @@ class AppleNewsNotifierTest extends AbstractPbjxTest
     /** @var VideoV1 */
     protected $videoNode;
 
-    protected function setup()
+    protected function setup(): void
     {
         parent::setup();
         $this->markTestSkipped();

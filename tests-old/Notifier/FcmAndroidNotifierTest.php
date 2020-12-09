@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace Triniti\Tests\Notify\Notifier;
 
-use Acme\Schemas\Iam\Node\BrowserAppV1;
+use Acme\Schemas\Iam\Node\AndroidAppV1;
 use Acme\Schemas\News\Node\ArticleV1;
-use Acme\Schemas\Notify\Node\BrowserNotificationV1;
+use Acme\Schemas\Notify\Node\AndroidNotificationV1;
 use Acme\Schemas\Sys\Node\FlagsetV1;
 use Defuse\Crypto\Crypto;
 use Defuse\Crypto\Key;
@@ -15,11 +15,11 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use Triniti\Notify\Notifier;
-use Triniti\Notify\Notifier\FcmBrowserNotifier;
+use Triniti\Notify\Notifier\FcmAndroidNotifier;
 use Triniti\Sys\Flags;
 use Triniti\Tests\Notify\AbstractPbjxTest;
 
-class FcmBrowserNotifierTest extends AbstractPbjxTest
+class FcmAndroidNotifierTest extends AbstractPbjxTest
 {
     const FCM_API_KEY = 'XXX';
 
@@ -32,22 +32,21 @@ class FcmBrowserNotifierTest extends AbstractPbjxTest
     /** @var Notifier */
     protected $notifier;
 
-    public function setUp()
+    public function setup(): void
     {
-        parent::setUp();
+        parent::setup();
 
         $flagset = FlagsetV1::fromArray(['_id' => 'test']);
         $this->ncr->putNode($flagset);
         $this->flags = new Flags($this->ncr, 'acme:flagset:test');
         $this->key = Key::createNewRandomKey();
-        $this->notifier = new class($this->flags, $this->key) extends FcmBrowserNotifier
+        $this->notifier = new class($this->flags, $this->key) extends FcmAndroidNotifier
         {
             protected function getGuzzleClient(): GuzzleClient
             {
                 $mock = new MockHandler([
                     new Response(201, [], '{"message_id":"123"}'),
                 ]);
-
                 return new GuzzleClient(['handler' => HandlerStack::create($mock)]);
             }
 
@@ -58,14 +57,16 @@ class FcmBrowserNotifierTest extends AbstractPbjxTest
         };
     }
 
-    public function testSendWithBrowserFlagDisabled()
+    public function testSendWithAndroidFlagDisabled()
     {
-        $flagset = FlagsetV1::fromArray([
-            '_id'      => 'browser',
-            'booleans' => ['fcm_browser_notifier_disabled' => true],
-        ]);
+        $flagset = FlagsetV1::fromArray(
+            [
+                '_id'      => 'android',
+                'booleans' => ['fcm_android_notifier_disabled' => true],
+            ]
+        );
         $this->ncr->putNode($flagset);
-        $this->notifier->setFlags(new Flags($this->ncr, 'acme:flagset:browser'));
+        $this->notifier->setFlags(new Flags($this->ncr, 'acme:flagset:android'));
         $result = $this->notifier->send($this->getNotification(), $this->getApp(), $this->getContent());
 
         $this->assertFalse($result->get('ok'), 'notifications are cancelled when flag is disabled');
@@ -77,13 +78,23 @@ class FcmBrowserNotifierTest extends AbstractPbjxTest
      */
     public function testSendWithoutContent()
     {
-        $result = $this->notifier->send($this->getNotification(), $this->getApp());
+        $result = $this->notifier->send($this->getNotificationWithTopics(), $this->getApp());
         $this->assertTrue($result->get('ok'), 'notifications can be sent without content');
         $this->assertSame(
             '123',
             $result->getFromMap('tags', 'fcm_message_id'),
             'fcm_message_id must match'
         );
+    }
+
+    public function testSendWithNotificationBody()
+    {
+        $result = $this->notifier->send(
+            $this->getNotificationWithBody(),
+            $this->getApp(),
+            $this->getContent()
+        );
+        $this->assertTrue($result->get('ok'), 'notification must be sent successfully when FCM topics are set');
     }
 
     public function testSendWithTopics()
@@ -97,31 +108,40 @@ class FcmBrowserNotifierTest extends AbstractPbjxTest
     }
 
     /**
-     * @return BrowserNotificationV1
+     * @return AndroidNotificationV1
      */
-    protected function getNotification(): BrowserNotificationV1
+    protected function getNotification(): AndroidNotificationV1
     {
-        return BrowserNotificationV1::create()
+        return AndroidNotificationV1::create()
             ->set('title', 'Title of the notification');
     }
 
     /**
-     * @return BrowserNotificationV1
+     * @return AndroidNotificationV1
      */
-    protected function getNotificationWithTopics(): BrowserNotificationV1
+    protected function getNotificationWithBody(): AndroidNotificationV1
     {
-        return BrowserNotificationV1::create()
+        return AndroidNotificationV1::create()
             ->set('title', 'Title of the notification')
-            ->set('body', 'Body of the notification')
-            ->addToSet('fcm_topics', ['browser-all']);
+            ->set('body', 'Body of the notification');
     }
 
     /**
-     * @return BrowserAppV1
+     * @return AndroidNotificationV1
      */
-    protected function getApp(): BrowserAppV1
+    protected function getNotificationWithTopics(): AndroidNotificationV1
     {
-        return BrowserAppV1::create()
+        return AndroidNotificationV1::create()
+            ->set('title', 'Title of the notification')
+            ->addToSet('fcm_topics', ['android-all']);
+    }
+
+    /**
+     * @return AndroidAppV1
+     */
+    protected function getApp(): AndroidAppV1
+    {
+        return AndroidAppV1::create()
             ->set(
                 'fcm_api_key',
                 Crypto::encrypt(
@@ -136,9 +156,11 @@ class FcmBrowserNotifierTest extends AbstractPbjxTest
      */
     protected function getContent(): ArticleV1
     {
-        return ArticleV1::fromArray([
-            '_id'   => '5c9cc362-5a4b-11e9-9606-30342d323838',
-            'title' => 'Article title',
-        ]);
+        return ArticleV1::fromArray(
+            [
+                '_id'   => '5c9cc362-5a4b-11e9-9606-30342d323838',
+                'title' => 'Article title',
+            ]
+        );
     }
 }

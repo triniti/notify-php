@@ -33,7 +33,7 @@ class SendGridEmailNotifierTest extends AbstractPbjxTest
     /** @var SendGridEmailNotifier */
     private $notifier;
 
-    public function setup()
+    public function setup(): void
     {
         parent::setup();
 

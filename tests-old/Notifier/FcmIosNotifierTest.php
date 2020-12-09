@@ -32,9 +32,9 @@ class FcmIosNotifierTest extends AbstractPbjxTest
     /** @var Notifier */
     protected $notifier;
 
-    public function setUp()
+    public function setup(): void
     {
-        parent::setUp();
+        parent::setup();
 
         $flagset = FlagsetV1::fromArray(['_id' => 'test']);
         $this->ncr->putNode($flagset);

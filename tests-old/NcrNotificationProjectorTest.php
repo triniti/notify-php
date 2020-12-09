@@ -21,7 +21,7 @@ final class NcrNotificationProjectorTest extends AbstractPbjxTest
     /** @var NcrSearch|\PHPUnit_Framework_MockObject_MockObject */
     protected $ncrSearch;
 
-    public function setup()
+    public function setup(): void
     {
         parent::setup();
         $this->ncrSearch = $this->getMockBuilder(MockNcrSearch::class)->getMock();

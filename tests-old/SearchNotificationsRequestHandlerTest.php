@@ -5,18 +5,18 @@ namespace Triniti\Tests\Notify;
 
 use Acme\Schemas\Notify\Request\SearchNotificationsRequestV1;
 use Gdbots\Ncr\NcrSearch;
+use Gdbots\Pbj\Message;
+use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbj\Schema;
+use Gdbots\Pbj\SchemaCurie;
 use Gdbots\Pbj\SchemaQName;
+use Gdbots\Pbj\WellKnown\NodeRef;
 use Gdbots\QueryParser\Enum\BoolOperator;
 use Gdbots\QueryParser\Node\Field;
 use Gdbots\QueryParser\Node\Word;
 use Gdbots\QueryParser\ParsedQuery;
 use Gdbots\Schemas\Ncr\Enum\NodeStatus;
-use Gdbots\Schemas\Ncr\Mixin\SearchNodesRequest\SearchNodesRequest;
-use Gdbots\Schemas\Ncr\Mixin\SearchNodesResponse\SearchNodesResponse;
-use Gdbots\Schemas\Ncr\NodeRef;
 use Triniti\Notify\SearchNotificationsRequestHandler;
-use Triniti\Schemas\Notify\Mixin\Notification\NotificationV1Mixin;
 
 final class SearchNotificationsRequestHandlerTest extends AbstractPbjxTest
 {
@@ -32,9 +32,9 @@ final class SearchNotificationsRequestHandlerTest extends AbstractPbjxTest
             public $addStatusField = false;
 
             public function searchNodes(
-                SearchNodesRequest $request,
+                Message $request,
                 ParsedQuery $actualParsedQuery,
-                SearchNodesResponse $response,
+                Message $response,
                 array $qnames = [],
                 array $context = []
             ): void {
@@ -119,9 +119,9 @@ final class SearchNotificationsRequestHandlerTest extends AbstractPbjxTest
             public $expectedQNames;
 
             public function searchNodes(
-                SearchNodesRequest $request,
+                Message $request,
                 ParsedQuery $parsedQuery,
-                SearchNodesResponse $response,
+                Message $response,
                 array $qnames = [],
                 array $context = []
             ): void {
@@ -161,11 +161,10 @@ final class SearchNotificationsRequestHandlerTest extends AbstractPbjxTest
         $ncrSearch->test = $this;
         $handler = new SearchNotificationsRequestHandler($ncrSearch);
         $validQNames = [];
-
-        array_map(function (Schema $schema) use (&$validQNames) {
-            $qname = $schema->getQName();
+        foreach (MessageResolver::findAllUsingMixin('triniti:notify:mixin:notification:v1', false) as $curie) {
+            $qname = SchemaCurie::fromString($curie)->getQName();
             $validQNames[$qname->getMessage()] = $qname;
-        }, NotificationV1Mixin::findAll());
+        }
 
         $ncrSearch->expectedQNames = [$validQNames['android-notification'], $validQNames['apple-news-notification']];
         $request = SearchNotificationsRequestV1::create();
@@ -196,9 +195,9 @@ final class SearchNotificationsRequestHandlerTest extends AbstractPbjxTest
             public $expectedContentRef;
 
             public function searchNodes(
-                SearchNodesRequest $request,
+                Message $request,
                 ParsedQuery $parsedQuery,
-                SearchNodesResponse $response,
+                Message $response,
                 array $qnames = [],
                 array $context = []
             ): void {

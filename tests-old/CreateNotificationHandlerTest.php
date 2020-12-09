@@ -15,7 +15,7 @@ use Gdbots\Schemas\Pbjx\StreamId;
 use Triniti\Notify\CreateNotificationHandler;
 use Triniti\Schemas\Notify\Enum\NotificationSendStatus;
 
-final class CreateNotificationHandlerTest extends AbstractPbjxTest
+final class CreateNotificationHandlerTestOld extends AbstractPbjxTest
 {
     public function testHandleCommand(): void
     {

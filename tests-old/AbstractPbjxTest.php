@@ -9,15 +9,25 @@ use Gdbots\Pbjx\EventStore\InMemoryEventStore;
 use Gdbots\Pbjx\Pbjx;
 use Gdbots\Pbjx\RegisteringServiceLocator;
 use Gdbots\Pbjx\Scheduler\Scheduler;
+use Gdbots\Schemas\Pbjx\Mixin\Command\Command;
 use PHPUnit\Framework\TestCase;
 
-abstract class AbstractPbjxTest extends TestCase
+abstract class AbstractPbjxTestOld extends TestCase
 {
-    protected RegisteringServiceLocator $locator;
-    protected Pbjx $pbjx;
-    protected InMemoryEventStore $eventStore;
-    protected InMemoryNcr $ncr;
-    protected Scheduler $scheduler;
+    /** @var RegisteringServiceLocator */
+    protected $locator;
+
+    /** @var Pbjx */
+    protected $pbjx;
+
+    /** @var InMemoryEventStore */
+    protected $eventStore;
+
+    /** @var InMemoryNcr */
+    protected $ncr;
+
+    /** @var Scheduler */
+    protected $scheduler;
 
     protected function setup(): void
     {

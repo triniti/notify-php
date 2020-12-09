@@ -4,28 +4,35 @@ declare(strict_types=1);
 namespace Triniti\Notify;
 
 use Gdbots\Ncr\AbstractSearchNodesRequestHandler;
-use Gdbots\Pbj\Schema;
+use Gdbots\Pbj\Message;
+use Gdbots\Pbj\MessageResolver;
+use Gdbots\Pbj\SchemaCurie;
+use Gdbots\Pbjx\Pbjx;
 use Gdbots\QueryParser\Enum\BoolOperator;
 use Gdbots\QueryParser\Node\Field;
 use Gdbots\QueryParser\Node\Word;
 use Gdbots\QueryParser\ParsedQuery;
-use Gdbots\Schemas\Ncr\Mixin\SearchNodesRequest\SearchNodesRequest;
-use Triniti\Schemas\Notify\Mixin\Notification\NotificationV1Mixin;
-use Triniti\Schemas\Notify\Mixin\SearchNotificationsRequest\SearchNotificationsRequestV1Mixin;
+use Triniti\Schemas\Notify\Request\SearchNotificationsResponseV1;
 
 class SearchNotificationsRequestHandler extends AbstractSearchNodesRequestHandler
 {
-    /**
-     * {@inheritdoc}
-     */
-    protected function createQNamesForSearchNodes(SearchNodesRequest $request, ParsedQuery $parsedQuery): array
+    public static function handlesCuries(): array
     {
-        $validQNames = [];
+        // deprecated mixins, will be removed in 3.x
+        $curies = MessageResolver::findAllUsingMixin('triniti:notify:mixin:search-notifications-request', false);
+        $curies[] = 'triniti:notify:request:search-notifications-request';
+        return $curies;
+    }
 
-        /** @var Schema $schema */
-        foreach (NotificationV1Mixin::findAll() as $schema) {
-            $qname = $schema->getQName();
-            $validQNames[$qname->getMessage()] = $qname;
+    protected function createQNamesForSearchNodes(Message $request, ParsedQuery $parsedQuery): array
+    {
+        static $validQNames = null;
+        if (null === $validQNames) {
+            $validQNames = [];
+            foreach (MessageResolver::findAllUsingMixin('triniti:notify:mixin:notification:v1', false) as $curie) {
+                $qname = SchemaCurie::fromString($curie)->getQName();
+                $validQNames[$qname->getMessage()] = $qname;
+            }
         }
 
         $qnames = [];
@@ -42,10 +49,7 @@ class SearchNotificationsRequestHandler extends AbstractSearchNodesRequestHandle
         return $qnames;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function beforeSearchNodes(SearchNodesRequest $request, ParsedQuery $parsedQuery): void
+    protected function beforeSearchNodes(Message $request, ParsedQuery $parsedQuery): void
     {
         parent::beforeSearchNodes($request, $parsedQuery);
         $required = BoolOperator::REQUIRED();
@@ -81,13 +85,8 @@ class SearchNotificationsRequestHandler extends AbstractSearchNodesRequestHandle
         }
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function handlesCuries(): array
+    protected function createSearchNodesResponse(Message $request, Pbjx $pbjx): Message
     {
-        return [
-            SearchNotificationsRequestV1Mixin::findOne()->getCurie(),
-        ];
+        return SearchNotificationsResponseV1::create();
     }
 }

@@ -3,28 +3,21 @@
   "description": "Php library that provides implementations for triniti:notify schemas.",
   "type": "library",
   "license": "Apache-2.0",
-  "repositories": [
-    {
-      "type": "vcs",
-      "url": "https://github.com/triniti/apple-news-php"
-    },
-    {
-      "type": "vcs",
-      "url": "https://github.com/triniti/sys-php"
-    }
-  ],
   "require": {
-    "php": ">=7.1",
+    "php": ">=7.4",
     "defuse/php-encryption": "^2.2",
-    "gdbots/ncr": "^2.0",
+    "gdbots/ncr": "dev-master",
     "guzzlehttp/guzzle": "^6.2.1",
     "triniti/apple-news": "dev-sy5",
     "triniti/sys": "dev-sy5"
   },
   "require-dev": {
-    "phpunit/phpunit": "^6.4",
-    "symfony/dependency-injection": "^4.1",
-    "triniti/acme-schemas": "^1.0",
+    "phpunit/phpunit": "^9.2",
+    "symfony/dependency-injection": "^5.2",
+    "triniti/acme-schemas": "dev-sy5",
+    "triniti/dam": "dev-sy5",
+    "triniti/news": "dev-sy5",
+    "triniti/schemas": "dev-sy5",
     "twig/twig": "^3.0"
   },
   "autoload": {
