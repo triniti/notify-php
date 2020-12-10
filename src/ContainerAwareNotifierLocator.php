@@ -10,33 +10,22 @@ use Triniti\Notify\Notifier\NullNotifier;
 
 class ContainerAwareNotifierLocator implements NotifierLocator
 {
-    /** @var ContainerInterface */
-    protected $container;
+    protected ContainerInterface $container;
+    protected Notifier $nullNotifier;
 
     /**
      * An array of notifiers keyed by the service id.
      *
      * @var Notifier[]
      */
-    protected $notifiers = [];
+    protected array $notifiers = [];
 
-    /** @var Notifier */
-    protected $nullNotifier;
-
-    /**
-     * @param ContainerInterface $container
-     */
     public function __construct(ContainerInterface $container)
     {
         $this->container = $container;
         $this->nullNotifier = new NullNotifier();
     }
 
-    /**
-     * @param SchemaCurie $curie
-     *
-     * @return Notifier
-     */
     public function getNotifier(SchemaCurie $curie): Notifier
     {
         $id = $this->curieToServiceId($curie);
@@ -56,11 +45,6 @@ class ContainerAwareNotifierLocator implements NotifierLocator
         return $this->notifiers[$id];
     }
 
-    /**
-     * @param SchemaCurie $curie
-     *
-     * @return string
-     */
     protected function curieToServiceId(SchemaCurie $curie): string
     {
         $message = str_replace('-notification', '', $curie->getMessage());

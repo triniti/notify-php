@@ -5,7 +5,6 @@ namespace Triniti\Tests\Notify;
 
 use Acme\Schemas\Canvas\Node\PageV1;
 use Acme\Schemas\Iam\Node\AndroidAppV1;
-use Acme\Schemas\Iam\Node\AppleNewsAppV1;
 use Acme\Schemas\News\Command\CreateArticleV1;
 use Acme\Schemas\News\Node\ArticleV1;
 use Acme\Schemas\Notify\Command\CreateNotificationV1;

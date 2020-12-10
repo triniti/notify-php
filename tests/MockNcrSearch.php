@@ -8,7 +8,7 @@ use Gdbots\Pbj\Message;
 use Gdbots\Pbj\SchemaQName;
 use Gdbots\QueryParser\ParsedQuery;
 
-class MockNcrSearchOld implements NcrSearch
+class MockNcrSearch implements NcrSearch
 {
     public function createStorage(SchemaQName $qname, array $context = []): void
     {
