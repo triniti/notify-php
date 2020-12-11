@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace Triniti\Tests\Notify\Notifier;
 
-use Acme\Schemas\Iam\Node\IosAppV1;
+use Acme\Schemas\Iam\Node\AndroidAppV1;
 use Acme\Schemas\News\Node\ArticleV1;
-use Acme\Schemas\Notify\Node\IosNotificationV1;
+use Acme\Schemas\Notify\Node\AndroidNotificationV1;
 use Acme\Schemas\Sys\Node\FlagsetV1;
 use Defuse\Crypto\Crypto;
 use Defuse\Crypto\Key;
@@ -15,22 +15,17 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use Triniti\Notify\Notifier;
-use Triniti\Notify\Notifier\FcmIosNotifier;
+use Triniti\Notify\Notifier\FcmAndroidNotifier;
 use Triniti\Sys\Flags;
 use Triniti\Tests\Notify\AbstractPbjxTest;
 
-class FcmIosNotifierTest extends AbstractPbjxTest
+class FcmAndroidNotifierTest extends AbstractPbjxTest
 {
     const FCM_API_KEY = 'XXX';
 
-    /** @var Flags */
-    protected $flags;
-
-    /** @var Key */
-    protected $key;
-
-    /** @var Notifier */
-    protected $notifier;
+    protected Flags $flags;
+    protected Key $key;
+    protected Notifier $notifier;
 
     public function setup(): void
     {
@@ -40,7 +35,7 @@ class FcmIosNotifierTest extends AbstractPbjxTest
         $this->ncr->putNode($flagset);
         $this->flags = new Flags($this->ncr, 'acme:flagset:test');
         $this->key = Key::createNewRandomKey();
-        $this->notifier = new class($this->flags, $this->key) extends FcmIosNotifier
+        $this->notifier = new class($this->flags, $this->key) extends FcmAndroidNotifier
         {
             protected function getGuzzleClient(): GuzzleClient
             {
@@ -57,16 +52,16 @@ class FcmIosNotifierTest extends AbstractPbjxTest
         };
     }
 
-    public function testSendWithIosFlagDisabled()
+    public function testSendWithAndroidFlagDisabled()
     {
         $flagset = FlagsetV1::fromArray(
             [
-                '_id'      => 'ios',
-                'booleans' => ['fcm_ios_notifier_disabled' => true],
+                '_id'      => 'android',
+                'booleans' => ['fcm_android_notifier_disabled' => true],
             ]
         );
         $this->ncr->putNode($flagset);
-        $this->notifier->setFlags(new Flags($this->ncr, 'acme:flagset:ios'));
+        $this->notifier->setFlags(new Flags($this->ncr, 'acme:flagset:android'));
         $result = $this->notifier->send($this->getNotification(), $this->getApp(), $this->getContent());
 
         $this->assertFalse($result->get('ok'), 'notifications are cancelled when flag is disabled');
@@ -107,41 +102,29 @@ class FcmIosNotifierTest extends AbstractPbjxTest
         $this->assertTrue($result->get('ok'), 'notification must be sent successfully when FCM topics are set');
     }
 
-    /**
-     * @return IosNotificationV1
-     */
-    protected function getNotification(): IosNotificationV1
+    protected function getNotification(): AndroidNotificationV1
     {
-        return IosNotificationV1::create()
+        return AndroidNotificationV1::create()
             ->set('title', 'Title of the notification');
     }
 
-    /**
-     * @return IosNotificationV1
-     */
-    protected function getNotificationWithBody(): IosNotificationV1
+    protected function getNotificationWithBody(): AndroidNotificationV1
     {
-        return IosNotificationV1::create()
+        return AndroidNotificationV1::create()
             ->set('title', 'Title of the notification')
             ->set('body', 'Body of the notification');
     }
 
-    /**
-     * @return IosNotificationV1
-     */
-    protected function getNotificationWithTopics(): IosNotificationV1
+    protected function getNotificationWithTopics(): AndroidNotificationV1
     {
-        return IosNotificationV1::create()
+        return AndroidNotificationV1::create()
             ->set('title', 'Title of the notification')
-            ->addToSet('fcm_topics', ['ios-all']);
+            ->addToSet('fcm_topics', ['android-all']);
     }
 
-    /**
-     * @return IosAppV1
-     */
-    protected function getApp(): IosAppV1
+    protected function getApp(): AndroidAppV1
     {
-        return IosAppV1::create()
+        return AndroidAppV1::create()
             ->set(
                 'fcm_api_key',
                 Crypto::encrypt(
@@ -151,9 +134,6 @@ class FcmIosNotifierTest extends AbstractPbjxTest
             );
     }
 
-    /**
-     * @return ArticleV1
-     */
     protected function getContent(): ArticleV1
     {
         return ArticleV1::fromArray(

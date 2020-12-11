@@ -5,10 +5,9 @@ namespace Triniti\Notify\Notifier;
 
 use Defuse\Crypto\Crypto;
 use Defuse\Crypto\Key;
-use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Pbj\Message;
-use Gdbots\Pbjx\Util\StatusCodeConverter;
-use Gdbots\Schemas\Iam\Mixin\App\App;
+use Gdbots\Pbj\Util\ClassUtil;
+use Gdbots\Pbjx\Util\StatusCodeUtil;
 use Gdbots\Schemas\Pbjx\Enum\Code;
 use Gdbots\Schemas\Pbjx\Enum\HttpCode;
 use GuzzleHttp\Client as GuzzleClient;
@@ -19,9 +18,6 @@ use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\RequestInterface;
 use Triniti\Notify\Exception\RequiredFieldNotSet;
 use Triniti\Notify\Notifier;
-use Triniti\Schemas\Notify\Mixin\HasNotifications\HasNotifications;
-use Triniti\Schemas\Notify\Mixin\Notification\Notification;
-use Triniti\Schemas\Notify\NotifierResult;
 use Triniti\Schemas\Notify\NotifierResultV1;
 use Triniti\Sys\Flags;
 
@@ -30,32 +26,18 @@ abstract class AbstractFcmNotifier implements Notifier
     const API_ENDPOINT = 'https://fcm.googleapis.com';
     const DISABLED_FLAG_NAME = 'fcm_notifier_disabled';
 
-    /** @var string */
-    protected $apiKey;
+    protected string $apiKey;
+    protected Flags $flags;
+    protected ?GuzzleClient $guzzleClient = null;
+    protected Key $key;
 
-    /** @var Flags */
-    protected $flags;
-
-    /** @var GuzzleClient */
-    protected $guzzleClient;
-
-    /** @var Key */
-    protected $key;
-
-    /**
-     * @param Flags $flags
-     * @param Key   $key
-     */
     public function __construct(Flags $flags, Key $key)
     {
         $this->flags = $flags;
         $this->key = $key;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function send(Notification $notification, App $app, ?HasNotifications $content = null): NotifierResult
+    public function send(Message $notification, Message $app, ?Message $content = null): Message
     {
         if ($this->flags->getBoolean(static::DISABLED_FLAG_NAME)) {
             return NotifierResultV1::create()
@@ -83,17 +65,13 @@ abstract class AbstractFcmNotifier implements Notifier
             return NotifierResultV1::create()
                 ->set('ok', false)
                 ->set('code', $code)
-                ->set('error_name', ClassUtils::getShortName($e))
+                ->set('error_name', ClassUtil::getShortName($e))
                 ->set('error_message', substr($e->getMessage(), 0, 2048));
         }
 
         return $result;
     }
 
-    /**
-     * @param Message $notification
-     * @param Message $app
-     */
     protected function validate(Message $notification, Message $app): void
     {
         if (!$app->has('fcm_api_key')) {
@@ -161,7 +139,7 @@ abstract class AbstractFcmNotifier implements Notifier
 
             return [
                 'ok'           => HttpCode::HTTP_OK === $httpCode || HttpCode::HTTP_CREATED === $httpCode,
-                'code'         => StatusCodeConverter::httpToVendor($httpCode),
+                'code'         => StatusCodeUtil::httpToVendor($httpCode),
                 'http_code'    => $httpCode,
                 'raw_response' => $content,
                 'response'     => json_decode($content, true),
@@ -171,11 +149,6 @@ abstract class AbstractFcmNotifier implements Notifier
         }
     }
 
-    /**
-     * @param \Throwable $exception
-     *
-     * @return array
-     */
     protected function convertException(\Throwable $exception): array
     {
         if ($exception instanceof RequestException) {
@@ -188,10 +161,10 @@ abstract class AbstractFcmNotifier implements Notifier
 
         return [
             'ok'            => false,
-            'code'          => StatusCodeConverter::httpToVendor($httpCode),
+            'code'          => StatusCodeUtil::httpToVendor($httpCode),
             'http_code'     => $httpCode,
             'raw_response'  => $response,
-            'error_name'    => ClassUtils::getShortName($exception),
+            'error_name'    => ClassUtil::getShortName($exception),
             'error_message' => substr($exception->getMessage(), 0, 2048),
         ];
     }

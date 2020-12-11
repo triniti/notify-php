@@ -5,10 +5,9 @@ namespace Triniti\Notify\Notifier;
 
 use Defuse\Crypto\Crypto;
 use Defuse\Crypto\Key;
-use Gdbots\Common\Util\ClassUtils;
 use Gdbots\Pbj\Message;
-use Gdbots\Pbjx\Util\StatusCodeConverter;
-use Gdbots\Schemas\Iam\Mixin\App\App;
+use Gdbots\Pbj\Util\ClassUtil;
+use Gdbots\Pbjx\Util\StatusCodeUtil;
 use Gdbots\Schemas\Pbjx\Enum\Code;
 use Gdbots\Schemas\Pbjx\Enum\HttpCode;
 use GuzzleHttp\Client as GuzzleClient;
@@ -20,9 +19,6 @@ use Psr\Http\Message\RequestInterface;
 use Triniti\Notify\Exception\RequiredFieldNotSet;
 use Triniti\Notify\Notifier;
 use Triniti\Schemas\Common\RenderContextV1;
-use Triniti\Schemas\Notify\Mixin\HasNotifications\HasNotifications;
-use Triniti\Schemas\Notify\Mixin\Notification\Notification;
-use Triniti\Schemas\Notify\NotifierResult;
 use Triniti\Schemas\Notify\NotifierResultV1;
 use Triniti\Sys\Flags;
 use Twig\Environment;
@@ -31,26 +27,12 @@ class SendGridEmailNotifier implements Notifier
 {
     const ENDPOINT = 'https://api.sendgrid.com/v3/';
 
-    /** @var Flags */
-    protected $flags;
+    protected Flags $flags;
+    protected Key $key;
+    protected Environment $twig;
+    protected ?GuzzleClient $guzzleClient = null;
+    protected string $apiKey;
 
-    /** @var Key */
-    protected $key;
-
-    /** @var Environment */
-    protected $twig;
-
-    /* @var GuzzleClient */
-    protected $guzzleClient;
-
-    /* @var string */
-    protected $apiKey;
-
-    /**
-     * @param Flags       $flags
-     * @param Key         $key
-     * @param Environment $twig
-     */
     public function __construct(Flags $flags, Key $key, Environment $twig)
     {
         $this->flags = $flags;
@@ -58,10 +40,7 @@ class SendGridEmailNotifier implements Notifier
         $this->twig = $twig;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function send(Notification $notification, App $app, ?HasNotifications $content = null): NotifierResult
+    public function send(Message $notification, Message $app, ?Message $content = null): Message
     {
         if (null === $content) {
             return NotifierResultV1::create()
@@ -91,7 +70,7 @@ class SendGridEmailNotifier implements Notifier
             return NotifierResultV1::create()
                 ->set('ok', false)
                 ->set('code', $code)
-                ->set('error_name', ClassUtils::getShortName($e))
+                ->set('error_name', ClassUtil::getShortName($e))
                 ->set('error_message', substr($e->getMessage(), 0, 2048));
         }
 
@@ -121,13 +100,6 @@ class SendGridEmailNotifier implements Notifier
         }
     }
 
-    /**
-     * @param Message $notification
-     * @param Message $app
-     * @param Message $content
-     *
-     * @return array
-     */
     protected function buildCampaign(Message $notification, Message $app, Message $content): array
     {
         $context = RenderContextV1::fromArray([
@@ -207,7 +179,7 @@ class SendGridEmailNotifier implements Notifier
 
             return [
                 'ok'           => HttpCode::HTTP_CREATED === $httpCode,
-                'code'         => StatusCodeConverter::httpToVendor($httpCode),
+                'code'         => StatusCodeUtil::httpToVendor($httpCode),
                 'http_code'    => $httpCode,
                 'raw_response' => $content,
                 'response'     => json_decode($content, true),
@@ -217,11 +189,6 @@ class SendGridEmailNotifier implements Notifier
         }
     }
 
-    /**
-     * @param \Throwable $exception
-     *
-     * @return array
-     */
     protected function convertException(\Throwable $exception): array
     {
         if ($exception instanceof RequestException) {
@@ -234,17 +201,14 @@ class SendGridEmailNotifier implements Notifier
 
         return [
             'ok'            => false,
-            'code'          => StatusCodeConverter::httpToVendor($httpCode),
+            'code'          => StatusCodeUtil::httpToVendor($httpCode),
             'http_code'     => $httpCode,
             'raw_response'  => $response,
-            'error_name'    => ClassUtils::getShortName($exception),
+            'error_name'    => ClassUtil::getShortName($exception),
             'error_message' => substr($exception->getMessage(), 0, 2048),
         ];
     }
 
-    /**
-     * @return GuzzleClient
-     */
     protected function getGuzzleClient(): GuzzleClient
     {
         if (null === $this->guzzleClient) {

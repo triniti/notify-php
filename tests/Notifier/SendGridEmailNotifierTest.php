@@ -24,14 +24,9 @@ use Twig\Loader\FilesystemLoader;
 
 class SendGridEmailNotifierTest extends AbstractPbjxTest
 {
-    /** @var Key */
-    protected $key;
-
-    /** @var Environment */
-    protected $twig;
-
-    /** @var SendGridEmailNotifier */
-    private $notifier;
+    protected Key $key;
+    protected Environment $twig;
+    private SendGridEmailNotifier $notifier;
 
     public function setup(): void
     {
@@ -48,9 +43,6 @@ class SendGridEmailNotifierTest extends AbstractPbjxTest
 
         $this->notifier = new class($flags, $this->key, $this->twig) extends SendGridEmailNotifier
         {
-            /**
-             * @param Flags $flags
-             */
             public function setFlags(Flags $flags): void
             {
                 $this->flags = $flags;
@@ -83,16 +75,13 @@ class SendGridEmailNotifierTest extends AbstractPbjxTest
      * Emails are sent without a content-ref, notification body is rendered as email body
      * note a valid use case yet.
      */
-    public function xxtestSendWithoutContent()
+    public function xxtestSendWithoutContent() // todo: what is up with this name?
     {
         $result = $this->notifier->send($this->getNotification(), $this->getApp());
         $this->assertTrue($result->get('ok'));
         $this->assertSame('123', $result->getFromMap('tags', 'sendgrid_campaign_id'));
     }
 
-    /**
-     * @return EmailNotificationV1
-     */
     protected function getNotification(): EmailNotificationV1
     {
         return EmailNotificationV1::create()
@@ -108,9 +97,6 @@ class SendGridEmailNotifierTest extends AbstractPbjxTest
             ->addToSet('lists', ['demo']);
     }
 
-    /**
-     * @return EmailAppV1
-     */
     protected function getApp(): EmailAppV1
     {
         return EmailAppV1::create()
@@ -141,9 +127,6 @@ class SendGridEmailNotifierTest extends AbstractPbjxTest
         $this->assertSame(Code::CANCELLED, $result->get('code'));
     }
 
-    /**
-     * @return ArticleV1
-     */
     protected function getContent(): ArticleV1
     {
         return ArticleV1::create()

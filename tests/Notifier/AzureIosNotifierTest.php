@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace Triniti\Tests\Notify\Notifier;
 
-use Acme\Schemas\Iam\Node\AndroidAppV1;
+use Acme\Schemas\Iam\Node\IosAppV1;
 use Acme\Schemas\News\Node\ArticleV1;
-use Acme\Schemas\Notify\Node\AndroidNotificationV1;
+use Acme\Schemas\Notify\Node\IosNotificationV1;
 use Acme\Schemas\Sys\Node\FlagsetV1;
 use Defuse\Crypto\Crypto;
 use Defuse\Crypto\Key;
@@ -15,23 +15,18 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 use Triniti\Notify\Notifier;
-use Triniti\Notify\Notifier\AzureAndroidNotifier;
+use Triniti\Notify\Notifier\AzureIosNotifier;
 use Triniti\Sys\Flags;
 use Triniti\Tests\Notify\AbstractPbjxTest;
 
-class AzureAndroidNotifierTestOld extends AbstractPbjxTest
+class AzureIosNotifierTest extends AbstractPbjxTest
 {
     const CONNECTION_STRING = 'Endpoint=sb://endpoint/;SharedAccessKeyName=keyName;SharedAccessKey=keyValue';
     const HUB_NAME = 'ad-hoc';
 
-    /** @var Flags */
-    protected $flags;
-
-    /** @var Key */
-    protected $key;
-
-    /** @var Notifier */
-    protected $notifier;
+    protected Flags $flags;
+    protected Key $key;
+    protected Notifier $notifier;
 
     public function setup(): void
     {
@@ -41,43 +36,28 @@ class AzureAndroidNotifierTestOld extends AbstractPbjxTest
         $this->ncr->putNode($flagset);
         $this->flags = new Flags($this->ncr, 'acme:flagset:test');
         $this->key = Key::createNewRandomKey();
-        $this->notifier = new class($this->flags, $this->key) extends AzureAndroidNotifier
+        $this->notifier = new class($this->flags, $this->key) extends AzureIosNotifier
         {
-            /**
-             * @return string
-             */
             public function getEndpoint(): string
             {
                 return $this->endpoint;
             }
 
-            /**
-             * @return string
-             */
             public function getHubName(): string
             {
                 return $this->hubName;
             }
 
-            /**
-             * @return string
-             */
             public function getSasKeyName(): string
             {
                 return $this->sasKeyName;
             }
 
-            /**
-             * @return string
-             */
             public function getSasKeyValue(): string
             {
                 return $this->sasKeyValue;
             }
 
-            /**
-             * {@inheritdoc}
-             */
             protected function getGuzzleClient(): GuzzleClient
             {
                 $location = $this->getEndpoint() . $this->getHubName() . '/messages/123' . self::API_VERSION;
@@ -96,9 +76,6 @@ class AzureAndroidNotifierTestOld extends AbstractPbjxTest
                 );
             }
 
-            /**
-             * @param Flags $flags
-             */
             public function setFlags(Flags $flags): void
             {
                 $this->flags = $flags;
@@ -106,16 +83,16 @@ class AzureAndroidNotifierTestOld extends AbstractPbjxTest
         };
     }
 
-    public function testSendWithAndroidFlagDisabled()
+    public function testSendWithIosFlagDisabled()
     {
         $flagset = FlagsetV1::fromArray(
             [
-                '_id'      => 'android',
-                'booleans' => ['azure_android_notifier_disabled' => true],
+                '_id'      => 'ios',
+                'booleans' => ['azure_ios_notifier_disabled' => true],
             ]
         );
         $this->ncr->putNode($flagset);
-        $this->notifier->setFlags(new Flags($this->ncr, 'acme:flagset:android'));
+        $this->notifier->setFlags(new Flags($this->ncr, 'acme:flagset:ios'));
         $result = $this->notifier->send($this->getNotification(), $this->getApp(), $this->getContent());
 
         $this->assertFalse($result->get('ok'), 'notifications are cancelled when flag is disabled');
@@ -171,21 +148,15 @@ class AzureAndroidNotifierTestOld extends AbstractPbjxTest
         );
     }
 
-    /**
-     * @return AndroidNotificationV1
-     */
-    protected function getNotification(): AndroidNotificationV1
+    protected function getNotification(): IosNotificationV1
     {
-        return AndroidNotificationV1::create()
+        return IosNotificationV1::create()
             ->set('title', 'Title of the notification');
     }
 
-    /**
-     * @return AndroidAppV1
-     */
-    protected function getApp(): AndroidAppV1
+    protected function getApp(): IosAppV1
     {
-        return AndroidAppV1::create()
+        return IosAppV1::create()
             ->set(
                 'azure_notification_hub_connection',
                 Crypto::encrypt(
@@ -196,9 +167,6 @@ class AzureAndroidNotifierTestOld extends AbstractPbjxTest
             ->set('azure_notification_hub_name', self::HUB_NAME);
     }
 
-    /**
-     * @return ArticleV1
-     */
     protected function getContent(): ArticleV1
     {
         return ArticleV1::fromArray(
