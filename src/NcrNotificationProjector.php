@@ -16,7 +16,7 @@ class NcrNotificationProjector extends NcrProjector
         $vendor = MessageResolver::getDefaultVendor();
         return [
             "{$vendor}:notify:event:notification-failed" => 'onNotificationFailed',
-            "{$vendor}:notify:event:notification-sent" => 'onNotificationSent',
+            "{$vendor}:notify:event:notification-sent"   => 'onNotificationSent',
         ];
     }
 
