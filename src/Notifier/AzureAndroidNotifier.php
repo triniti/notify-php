@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Triniti\Notify\Notifier;
 
 use Gdbots\Pbj\Message;
-use Gdbots\Schemas\Ncr\NodeRef;
+use Gdbots\Pbj\WellKnown\NodeRef;
 
 class AzureAndroidNotifier extends AbstractAzureNotifier
 {

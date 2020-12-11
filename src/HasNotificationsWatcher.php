@@ -16,7 +16,7 @@ use Psr\Log\LoggerInterface;
 use Triniti\Schemas\Notify\Enum\NotificationSendStatus;
 use Triniti\Schemas\Notify\Enum\SearchNotificationsSort;
 use Triniti\Schemas\Notify\Request\SearchNotificationsRequestV1;
-// todo: use projector and aggregate?
+
 /**
  * Responsible for watching changes to nodes that have
  * the mixin "triniti:notify:mixin:has-notifications" and

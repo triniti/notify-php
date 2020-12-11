@@ -19,19 +19,14 @@ use Triniti\Notify\Notifier\AzureAndroidNotifier;
 use Triniti\Sys\Flags;
 use Triniti\Tests\Notify\AbstractPbjxTest;
 
-class AzureAndroidNotifierTestOld extends AbstractPbjxTest
+class AzureAndroidNotifierTest extends AbstractPbjxTest
 {
     const CONNECTION_STRING = 'Endpoint=sb://endpoint/;SharedAccessKeyName=keyName;SharedAccessKey=keyValue';
     const HUB_NAME = 'ad-hoc';
 
-    /** @var Flags */
-    protected $flags;
-
-    /** @var Key */
-    protected $key;
-
-    /** @var Notifier */
-    protected $notifier;
+    protected Flags $flags;
+    protected Key $key;
+    protected Notifier $notifier;
 
     public function setup(): void
     {
@@ -43,41 +38,26 @@ class AzureAndroidNotifierTestOld extends AbstractPbjxTest
         $this->key = Key::createNewRandomKey();
         $this->notifier = new class($this->flags, $this->key) extends AzureAndroidNotifier
         {
-            /**
-             * @return string
-             */
             public function getEndpoint(): string
             {
                 return $this->endpoint;
             }
 
-            /**
-             * @return string
-             */
             public function getHubName(): string
             {
                 return $this->hubName;
             }
 
-            /**
-             * @return string
-             */
             public function getSasKeyName(): string
             {
                 return $this->sasKeyName;
             }
 
-            /**
-             * @return string
-             */
             public function getSasKeyValue(): string
             {
                 return $this->sasKeyValue;
             }
 
-            /**
-             * {@inheritdoc}
-             */
             protected function getGuzzleClient(): GuzzleClient
             {
                 $location = $this->getEndpoint() . $this->getHubName() . '/messages/123' . self::API_VERSION;
@@ -96,9 +76,6 @@ class AzureAndroidNotifierTestOld extends AbstractPbjxTest
                 );
             }
 
-            /**
-             * @param Flags $flags
-             */
             public function setFlags(Flags $flags): void
             {
                 $this->flags = $flags;
@@ -171,18 +148,12 @@ class AzureAndroidNotifierTestOld extends AbstractPbjxTest
         );
     }
 
-    /**
-     * @return AndroidNotificationV1
-     */
     protected function getNotification(): AndroidNotificationV1
     {
         return AndroidNotificationV1::create()
             ->set('title', 'Title of the notification');
     }
 
-    /**
-     * @return AndroidAppV1
-     */
     protected function getApp(): AndroidAppV1
     {
         return AndroidAppV1::create()
@@ -196,9 +167,6 @@ class AzureAndroidNotifierTestOld extends AbstractPbjxTest
             ->set('azure_notification_hub_name', self::HUB_NAME);
     }
 
-    /**
-     * @return ArticleV1
-     */
     protected function getContent(): ArticleV1
     {
         return ArticleV1::fromArray(
