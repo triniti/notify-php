@@ -3,44 +3,30 @@ declare(strict_types=1);
 
 namespace Triniti\Tests\Notify\Notifier;
 
-use Acme\Schemas\Iam\Node\AppleNewsApp;
 use Acme\Schemas\Iam\Node\AppleNewsAppV1;
 use Acme\Schemas\News\Node\ArticleV1;
-use Acme\Schemas\Notify\Node\AppleNewsNotification;
 use Acme\Schemas\Notify\Node\AppleNewsNotificationV1;
 use Acme\Schemas\Ovp\Node\VideoV1;
 use Acme\Schemas\Sys\Node\FlagsetV1;
 use Defuse\Crypto\Key;
+use Gdbots\Pbj\Message;
 use Gdbots\Pbj\WellKnown\UuidIdentifier;
 use Gdbots\Schemas\Ncr\Enum\NodeStatus;
-use Gdbots\Schemas\Ncr\NodeRef;
 use Gdbots\UriTemplate\UriTemplateService;
 use Triniti\AppleNews\ArticleDocumentMarshaler;
 use Triniti\Dam\UrlProvider;
 use Triniti\Notify\Notifier\AppleNewsNotifier;
-use Triniti\Schemas\Ovp\VideoId;
 use Triniti\Sys\Flags;
 use Triniti\Tests\Notify\AbstractPbjxTest;
 
 class AppleNewsNotifierTest extends AbstractPbjxTest
 {
-    /** @var AppleNewsApp */
-    protected $app;
-
-    /** @var AppleNewsNotifier */
-    protected $applenewsNotifier;
-
-    /** @var AppleNewsNotifier */
-    protected $mockAppleNewsNotifier;
-
-    /** @var AppleNewsNotification */
-    protected $notification;
-
-    /** @var UrlProvider */
-    protected $urlProvider;
-
-    /** @var VideoV1 */
-    protected $videoNode;
+    protected Message $app;
+    protected AppleNewsNotifier $appleNewsNotifier;
+    protected AppleNewsNotifier $mockAppleNewsNotifier;
+    protected Message $notification;
+    protected UrlProvider $urlProvider;
+    protected Message $videoNode;
 
     protected function setup(): void
     {
@@ -61,7 +47,7 @@ class AppleNewsNotifierTest extends AbstractPbjxTest
         $this->ncr->putNode($flagset);
         $flags = new Flags($this->ncr, 'acme:flagset:test');
 
-        $this->applenewsNotifier = new AppleNewsNotifier($flags, $key, $marshaler);
+        $this->appleNewsNotifier = new AppleNewsNotifier($flags, $key, $marshaler);
         $this->notification = AppleNewsNotificationV1::create()
             ->set('apple_news_id', UuidIdentifier::fromString('1fd3f344-28c1-4ad3-acb3-f32eac206401'))
             ->set('apple_news_revision', str_replace('=', '', strtr(base64_encode('AAAAAAAAAAAAAAAAAAAAAw=='), '+/', '-_')));
@@ -136,14 +122,13 @@ class AppleNewsNotifierTest extends AbstractPbjxTest
 
         $this->assertSame(
             [],
-            $ncrContext->invokeArgs($this->applenewsNotifier, [$this->notification]),
+            $ncrContext->invokeArgs($this->appleNewsNotifier, [$this->notification]),
             'Default ncr context should be a empty array'
         );
     }
 
     /**
      * Test to see if correct operation is being performed depending on apple_news_operation field in notification
-     *
      */
     public function testSendCreateArticleDocument()
     {
@@ -154,7 +139,6 @@ class AppleNewsNotifierTest extends AbstractPbjxTest
 
     /**
      * Test to see if correct operation is being performed depending on apple_news_operation field in notification
-     *
      */
     public function testSendUpdateArticleDocument()
     {
@@ -165,7 +149,6 @@ class AppleNewsNotifierTest extends AbstractPbjxTest
 
     /**
      * Test to see if correct operation is being performed depending on apple_news_operation field in notification
-     *
      */
     public function testSendDeleteArticleDocument()
     {
@@ -176,7 +159,6 @@ class AppleNewsNotifierTest extends AbstractPbjxTest
 
     /**
      * Test to see if correct operation is being performed depending on apple_news_operation field in notification
-     *
      */
     public function testSendNotification()
     {

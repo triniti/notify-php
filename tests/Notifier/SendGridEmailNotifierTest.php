@@ -75,8 +75,9 @@ class SendGridEmailNotifierTest extends AbstractPbjxTest
      * Emails are sent without a content-ref, notification body is rendered as email body
      * note a valid use case yet.
      */
-    public function xxtestSendWithoutContent() // todo: what is up with this name?
+    public function testSendWithoutContent()
     {
+        $this->markTestSkipped();
         $result = $this->notifier->send($this->getNotification(), $this->getApp());
         $this->assertTrue($result->get('ok'));
         $this->assertSame('123', $result->getFromMap('tags', 'sendgrid_campaign_id'));

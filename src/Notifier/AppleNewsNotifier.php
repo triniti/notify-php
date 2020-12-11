@@ -5,12 +5,11 @@ namespace Triniti\Notify\Notifier;
 
 use Defuse\Crypto\Crypto;
 use Defuse\Crypto\Key;
-use Gdbots\Common\Util\ClassUtils;
-use Gdbots\Common\Util\StringUtils;
 use Gdbots\Ncr\Ncr;
 use Gdbots\Pbj\Message;
+use Gdbots\Pbj\Util\ClassUtil;
+use Gdbots\Pbj\Util\StringUtil;
 use Gdbots\Pbjx\Pbjx;
-use Gdbots\Schemas\Iam\Mixin\App\App;
 use Gdbots\Schemas\Pbjx\Enum\Code;
 use Triniti\AppleNews\AppleNewsApi;
 use Triniti\AppleNews\ArticleDocumentMarshaler;
@@ -19,40 +18,19 @@ use Triniti\Notify\Exception\RequiredFieldNotSet;
 use Triniti\Notify\Notifier;
 use Triniti\Schemas\Notify\Enum\NotificationSendStatus;
 use Triniti\Schemas\Notify\Enum\SearchNotificationsSort;
-use Triniti\Schemas\Notify\Mixin\HasNotifications\HasNotifications;
-use Triniti\Schemas\Notify\Mixin\Notification\Notification;
-use Triniti\Schemas\Notify\Mixin\SearchNotificationsRequest\SearchNotificationsRequestV1Mixin;
-use Triniti\Schemas\Notify\NotifierResult;
 use Triniti\Schemas\Notify\NotifierResultV1;
+use Triniti\Schemas\Notify\Request\SearchNotificationsRequestV1;
 use Triniti\Sys\Flags;
 
 class AppleNewsNotifier implements Notifier
 {
-    /** @var Flags */
-    protected $flags;
+    protected Flags $flags;
+    protected Key $key;
+    protected Pbjx $pbjx;
+    protected ArticleDocumentMarshaler $marshaler;
+    protected AppleNewsApi $api;
+    protected Ncr $ncr;
 
-    /** @var Key */
-    protected $key;
-
-    /** @var Pbjx */
-    protected $pbjx;
-
-    /** @var ArticleDocumentMarshaler */
-    protected $marshaler;
-
-    /** @var AppleNewsApi */
-    protected $api;
-
-    /** @var Ncr */
-    protected $ncr;
-
-    /**
-     * @param Flags                    $flags
-     * @param Key                      $key
-     * @param Pbjx                     $pbjx
-     * @param ArticleDocumentMarshaler $marshaler
-     * @param Ncr                      $ncr
-     */
     public function __construct(Flags $flags, Key $key, Pbjx $pbjx, ArticleDocumentMarshaler $marshaler, Ncr $ncr)
     {
         $this->flags = $flags;
@@ -62,10 +40,7 @@ class AppleNewsNotifier implements Notifier
         $this->ncr = $ncr;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function send(Notification $notification, App $app, ?HasNotifications $content = null): NotifierResult
+    public function send(Message $notification, Message $app, ?Message $content = null): Message
     {
         if (null === $content) {
             return NotifierResultV1::create()
@@ -111,7 +86,7 @@ class AppleNewsNotifier implements Notifier
             return NotifierResultV1::create()
                 ->set('ok', false)
                 ->set('code', $code)
-                ->set('error_name', ClassUtils::getShortName($e))
+                ->set('error_name', ClassUtil::getShortName($e))
                 ->set('error_message', substr($e->getMessage(), 0, 2048));
         }
 
@@ -124,7 +99,7 @@ class AppleNewsNotifier implements Notifier
             $newsId = $response['data']['id'] ?? null;
             $shareUrl = $response['data']['shareUrl'] ?? null;
             $revision = $response['data']['revision'] ?? null;
-            $revision = $revision ? StringUtils::urlsafeB64Encode($revision) : $revision;
+            $revision = $revision ? StringUtil::urlsafeB64Encode((string)$revision) : $revision;
             $result
                 ->addToMap('tags', 'apple_news_id', $newsId)
                 ->addToMap('tags', 'apple_news_share_url', $shareUrl)
@@ -134,13 +109,6 @@ class AppleNewsNotifier implements Notifier
         return $result;
     }
 
-    /**
-     * @param Message $notification
-     * @param Message $app
-     * @param Message $article
-     *
-     * @return array
-     */
     protected function createArticleNotification(Message $notification, Message $app, Message $article): array
     {
         if (!$article->has('apple_news_id')) {
@@ -152,13 +120,6 @@ class AppleNewsNotifier implements Notifier
         ]);
     }
 
-    /**
-     * @param Message $notification
-     * @param Message $app
-     * @param Message $article
-     *
-     * @return array
-     */
     protected function createArticle(Message $notification, Message $app, Message $article): array
     {
         if (!$app->has('channel_id')) {
@@ -170,13 +131,6 @@ class AppleNewsNotifier implements Notifier
         return $this->api->createArticle($app->get('channel_id'), $document, $metadata);
     }
 
-    /**
-     * @param Message $notification
-     * @param Message $app
-     * @param Message $article
-     *
-     * @return array
-     */
     protected function updateArticle(Message $notification, Message $app, Message $article): array
     {
         if (!$article->has('apple_news_id')) {
@@ -210,13 +164,6 @@ class AppleNewsNotifier implements Notifier
         return $this->api->updateArticle((string)$article->get('apple_news_id'), $document, $metadata);
     }
 
-    /**
-     * @param Message $notification
-     * @param Message $app
-     * @param Message $article
-     *
-     * @return array
-     */
     protected function deleteArticle(Message $notification, Message $app, Message $article): array
     {
         if (!$article->has('apple_news_id')) {
@@ -226,11 +173,6 @@ class AppleNewsNotifier implements Notifier
         return $this->api->deleteArticle((string)$article->get('apple_news_id'));
     }
 
-    /**
-     * @param Message $notification
-     * @param Message $app
-     * @param Message $article
-     */
     protected function createApi(Message $notification, Message $app, Message $article): void
     {
         $this->api = new AppleNewsApi(
@@ -239,14 +181,9 @@ class AppleNewsNotifier implements Notifier
         );
     }
 
-    /**
-     * @param Message $notification
-     *
-     * @return string
-     */
     protected function getLatestRevision(Message $notification): ?string
     {
-        $request = SearchNotificationsRequestV1Mixin::findOne()->createMessage()
+        $request = SearchNotificationsRequestV1::create()
             ->addToSet('types', ['apple-news-notification'])
             ->set('q', '+apple_news_operation:(update OR create)')
             ->set('send_status', NotificationSendStatus::SENT())
@@ -264,14 +201,9 @@ class AppleNewsNotifier implements Notifier
         /** @var Message $result */
         $result = $response->getFromListAt('nodes', 0)->get('notifier_result');
         $revision = $result->getFromMap('tags', 'apple_news_revision');
-        return $revision ? StringUtils::urlsafeB64Decode($revision) : $revision;
+        return $revision ? StringUtil::urlsafeB64Decode($revision) : $revision;
     }
 
-    /**
-     * @param Message $article
-     *
-     * @return array
-     */
     protected function createArticleMetadata(Message $article): array
     {
         $sections = $this->createArticleSections($article);
