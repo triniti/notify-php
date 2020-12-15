@@ -7,7 +7,6 @@ use Acme\Schemas\Notify\Request\SearchNotificationsRequestV1;
 use Gdbots\Ncr\NcrSearch;
 use Gdbots\Pbj\Message;
 use Gdbots\Pbj\MessageResolver;
-use Gdbots\Pbj\Schema;
 use Gdbots\Pbj\SchemaCurie;
 use Gdbots\Pbj\SchemaQName;
 use Gdbots\Pbj\WellKnown\NodeRef;
@@ -24,12 +23,9 @@ final class SearchNotificationsRequestHandlerTest extends AbstractPbjxTest
     {
         $ncrSearch = new class implements NcrSearch
         {
-            /** @var SearchNotificationsRequestHandlerTest */
-            public $test;
-
+            public SearchNotificationsRequestHandlerTest $test;
             public $expectedParsedQueryJson;
-
-            public $addStatusField = false;
+            public bool $addStatusField = false;
 
             public function searchNodes(
                 Message $request,
@@ -113,9 +109,7 @@ final class SearchNotificationsRequestHandlerTest extends AbstractPbjxTest
     {
         $ncrSearch = new class implements NcrSearch
         {
-            /** @var SearchNotificationsRequestHandlerTest */
-            public $test;
-
+            public SearchNotificationsRequestHandlerTest $test;
             public $expectedQNames;
 
             public function searchNodes(
@@ -187,12 +181,9 @@ final class SearchNotificationsRequestHandlerTest extends AbstractPbjxTest
     {
         $ncrSearch = new class implements NcrSearch
         {
-            /** @var SearchNotificationsRequestHandlerTest */
-            public $test;
-
-            public $expectedAppRef;
-
-            public $expectedContentRef;
+            public SearchNotificationsRequestHandlerTest $test;
+            public NodeRef $expectedAppRef;
+            public NodeRef $expectedContentRef;
 
             public function searchNodes(
                 Message $request,

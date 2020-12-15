@@ -13,6 +13,8 @@ use Triniti\Schemas\Notify\Enum\NotificationSendStatus;
 
 class NotificationAggregate extends Aggregate
 {
+    use NotificationPbjxHelperTrait;
+
     protected function enrichNodeCreated(Message $event): void
     {
         parent::enrichNodeCreated($event);
@@ -100,22 +102,6 @@ class NotificationAggregate extends Aggregate
                 $notification->set('send_status', NotificationSendStatus::DRAFT());
             }
         }
-    }
-
-    protected function alreadySent(Message $notification): bool
-    {
-        /** @var NotificationSendStatus $status */
-        $status = $notification->get('send_status', NotificationSendStatus::DRAFT());
-
-        if (
-            $status->equals(NotificationSendStatus::SENT())
-            || $status->equals(NotificationSendStatus::FAILED())
-            || $status->equals(NotificationSendStatus::CANCELED())
-        ) {
-            return true;
-        }
-
-        return false;
     }
 
     /**

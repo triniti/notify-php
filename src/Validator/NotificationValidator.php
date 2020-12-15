@@ -5,49 +5,36 @@ namespace Triniti\Notify\Validator;
 
 use Gdbots\Pbj\Assertion;
 use Gdbots\Pbj\Message;
-use Gdbots\Pbj\Schema;
+use Gdbots\Pbj\MessageResolver;
+use Gdbots\Pbj\WellKnown\NodeRef;
 use Gdbots\Pbjx\DependencyInjection\PbjxValidator;
 use Gdbots\Pbjx\Event\PbjxEvent;
 use Gdbots\Pbjx\EventSubscriber;
-use Gdbots\Schemas\Ncr\NodeRef;
 use Triniti\Notify\Exception\NotificationAlreadyScheduled;
 use Triniti\Notify\Exception\NotificationAlreadySent;
 use Triniti\Notify\NotificationPbjxHelperTrait;
 use Triniti\Schemas\Notify\Enum\NotificationSendStatus;
-use Triniti\Schemas\Notify\Mixin\AppleNewsNotification\AppleNewsNotification;
-use Triniti\Schemas\Notify\Mixin\Notification\Notification;
-use Triniti\Schemas\Notify\Mixin\Notification\NotificationV1Mixin;
-use Triniti\Schemas\Notify\Mixin\SearchNotificationsRequest\SearchNotificationsRequestV1Mixin;
+use Triniti\Schemas\Notify\Request\SearchNotificationsRequestV1;
 
 class NotificationValidator implements EventSubscriber, PbjxValidator
 {
     use NotificationPbjxHelperTrait;
 
-    /**
-     * @return array
-     */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
-        /** @var Schema $schema */
-        $schema = NotificationV1Mixin::findAll()[0];
-        $curie = $schema->getCurie();
-        $prefix = "{$curie->getVendor()}:{$curie->getPackage()}:command:";
-
+        $vendor = MessageResolver::getDefaultVendor();
         return [
-            "{$prefix}create-notification.validate" => 'validateCreateNotification',
-            "{$prefix}update-notification.validate" => 'validateUpdateNotification',
+            "{$vendor}:notify:command:create-notification.validate" => 'validateCreateNotification',
+            "{$vendor}:notify:command:update-notification.validate" => 'validateUpdateNotification',
         ];
     }
 
-    /**
-     * @param PbjxEvent $pbjxEvent
-     */
     public function validateCreateNotification(PbjxEvent $pbjxEvent): void
     {
         $command = $pbjxEvent->getMessage();
         Assertion::true($command->has('node'), 'Field "node" is required.', 'node');
 
-        /** @var Notification $node */
+        /** @var Message $node */
         $node = $command->get('node');
         Assertion::true($node->has('app_ref'), 'Field "node.app_ref" is required.', 'node.app_ref');
 
@@ -70,18 +57,15 @@ class NotificationValidator implements EventSubscriber, PbjxValidator
         }
     }
 
-    /**
-     * @param PbjxEvent $pbjxEvent
-     */
     public function validateUpdateNotification(PbjxEvent $pbjxEvent): void
     {
         $command = $pbjxEvent->getMessage();
         Assertion::true($command->has('new_node'), 'Field "new_node" is required.', 'new_node');
 
-        /** @var Notification $oldNode */
+        /** @var Message $oldNode */
         $oldNode = $command->get('old_node');
 
-        /** @var Notification $newNode */
+        /** @var Message $newNode */
         $newNode = $command->get('new_node');
         Assertion::true($newNode->has('app_ref'), 'Field "new_node.app_ref" is required.', 'new_node.app_ref');
 
@@ -120,7 +104,7 @@ class NotificationValidator implements EventSubscriber, PbjxValidator
         /** @var NodeRef $contentRef */
         $contentRef = $notification->get('content_ref');
 
-        $request = SearchNotificationsRequestV1Mixin::findOne()->createMessage()
+        $request = SearchNotificationsRequestV1::create()
             ->set('app_ref', $appRef)
             ->set('content_ref', $contentRef)
             ->set('send_status', NotificationSendStatus::SCHEDULED())
