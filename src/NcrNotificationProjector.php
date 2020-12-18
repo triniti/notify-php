@@ -11,6 +11,7 @@ use Triniti\Schemas\Notify\Enum\NotificationSendStatus;
 
 class NcrNotificationProjector extends NcrProjector
 {
+    // todo: i think...we dont need this? because the handler will do it in aggregate?
     public static function getSubscribedEvents()
     {
         $vendor = MessageResolver::getDefaultVendor();

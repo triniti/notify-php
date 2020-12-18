@@ -13,6 +13,11 @@ trait NotificationPbjxHelperTrait
 {
     protected Ncr $ncr;
 
+    protected function isNodeSupported(Message $node): bool
+    {
+        return $node::schema()->hasMixin('triniti:notify:mixin:notification');
+    }
+
     /**
      * When a notification is created/updated we must ensure the app
      * it is bound to supports this type of notification. In all cases

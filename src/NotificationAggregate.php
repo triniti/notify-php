@@ -10,10 +10,33 @@ use Gdbots\Pbj\WellKnown\NodeRef;
 use Gdbots\Schemas\Ncr\Enum\NodeStatus;
 use Triniti\Notify\Exception\InvalidNotificationContent;
 use Triniti\Schemas\Notify\Enum\NotificationSendStatus;
+use Triniti\Schemas\Notify\Event\NotificationSentV1;
 
 class NotificationAggregate extends Aggregate
 {
     use NotificationPbjxHelperTrait;
+
+    public function failNotification(Message $command, Message $result): void
+    {
+        var_dump('fail');
+        die();
+    }
+
+    public function sendNotification(Message $command, Message $result): void
+    {
+        $event = NotificationSentV1::create();
+        $this->pbjx->copyContext($command, $event);
+        $event
+            ->set('node_ref', $this->nodeRef)
+            ->set('notifier_result', $result);
+        $this->recordEvent($event);
+    }
+
+    protected function applyNotificationSent(Message $event): void
+    {
+        var_dump('applyNotificationSent');
+        die();
+    }
 
     protected function enrichNodeCreated(Message $event): void
     {
