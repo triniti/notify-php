@@ -10,6 +10,7 @@ use Gdbots\Pbj\WellKnown\NodeRef;
 use Gdbots\Schemas\Ncr\Enum\NodeStatus;
 use Triniti\Notify\Exception\InvalidNotificationContent;
 use Triniti\Schemas\Notify\Enum\NotificationSendStatus;
+use Triniti\Schemas\Notify\Event\NotificationFailedV1;
 use Triniti\Schemas\Notify\Event\NotificationSentV1;
 
 class NotificationAggregate extends Aggregate
@@ -18,8 +19,12 @@ class NotificationAggregate extends Aggregate
 
     public function failNotification(Message $command, Message $result): void
     {
-        var_dump('fail');
-        die();
+        $event = NotificationFailedV1::create();
+        $this->pbjx->copyContext($command, $event);
+        $event
+            ->set('node_ref', $this->nodeRef)
+            ->set('notifier_result', $result);
+        $this->recordEvent($event);
     }
 
     public function sendNotification(Message $command, Message $result): void
@@ -34,8 +39,18 @@ class NotificationAggregate extends Aggregate
 
     protected function applyNotificationSent(Message $event): void
     {
-        var_dump('applyNotificationSent');
-        die();
+        $this->node
+            ->set('send_status', NotificationSendStatus::SENT())
+            ->set('sent_at', $event->get('occurred_at')->toDateTime())
+            ->set('notifier_result', $event->get('notifier_result'));
+    }
+
+    protected function applyNotificationFailed(Message $event): void
+    {
+        $this->node
+            ->set('send_status', NotificationSendStatus::FAILED())
+            ->set('sent_at', $event->get('occurred_at')->toDateTime())
+            ->set('notifier_result', $event->get('notifier_result'));
     }
 
     protected function enrichNodeCreated(Message $event): void

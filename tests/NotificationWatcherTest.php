@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace Triniti\Tests\Notify;
 
-// todo: make sure this has everything from NcrNotificationProjectorTest
 use Acme\Schemas\Notify\Event\NotificationCreatedV1;
 use Acme\Schemas\Notify\Event\NotificationDeletedV1;
 use Acme\Schemas\Notify\Event\NotificationUpdatedV1;
