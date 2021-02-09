@@ -6,6 +6,7 @@ namespace Triniti\Notify;
 use Gdbots\Ncr\Aggregate;
 use Gdbots\Ncr\AggregateResolver;
 use Gdbots\Pbj\Message;
+use Gdbots\Pbj\MessageResolver;
 use Gdbots\Pbj\WellKnown\NodeRef;
 use Gdbots\Schemas\Ncr\Enum\NodeStatus;
 use Triniti\Notify\Exception\InvalidNotificationContent;
@@ -157,5 +158,156 @@ class NotificationAggregate extends Aggregate
         if ($newName !== $name && is_callable([$this, $newName])) {
             return $this->$newName(...$arguments);
         }
+    }
+
+
+    /**
+     * This is for legacy uses of command/event mixins for common
+     * ncr operations. It will be removed in 3.x.
+     *
+     * @param Message $command
+     *
+     * @return Message
+     *
+     * @deprecated Will be removed in 3.x.
+     */
+    protected function createNodeExpiredEvent(Message $command): Message
+    {
+        return MessageResolver::resolveCurie('*:notify:event:notification-expired:v1')::create();
+    }
+
+    /**
+     * This is for legacy uses of command/event mixins for common
+     * ncr operations. It will be removed in 3.x.
+     *
+     * @param Message $command
+     *
+     * @return Message
+     *
+     * @deprecated Will be removed in 3.x.
+     */
+    protected function createNodeLockedEvent(Message $command): Message
+    {
+        return MessageResolver::resolveCurie('*:notify:event:notification-locked:v1')::create();
+    }
+
+    /**
+     * This is for legacy uses of command/event mixins for common
+     * ncr operations. It will be removed in 3.x.
+     *
+     * @param Message $command
+     *
+     * @return Message
+     *
+     * @deprecated Will be removed in 3.x.
+     */
+    protected function createNodeMarkedAsDraftEvent(Message $command): Message
+    {
+        return MessageResolver::resolveCurie('*:notify:event:notification-marked-as-draft:v1')::create();
+    }
+
+    /**
+     * This is for legacy uses of command/event mixins for common
+     * ncr operations. It will be removed in 3.x.
+     *
+     * @param Message $command
+     *
+     * @return Message
+     *
+     * @deprecated Will be removed in 3.x.
+     */
+    protected function createNodeMarkedAsPendingEvent(Message $command): Message
+    {
+        return MessageResolver::resolveCurie('*:notify:event:notification-marked-as-pending:v1')::create();
+    }
+
+    /**
+     * This is for legacy uses of command/event mixins for common
+     * ncr operations. It will be removed in 3.x.
+     *
+     * @param Message $command
+     *
+     * @return Message
+     *
+     * @deprecated Will be removed in 3.x.
+     */
+    protected function createNodePublishedEvent(Message $command): Message
+    {
+        return MessageResolver::resolveCurie('*:notify:event:notification-published:v1')::create();
+    }
+
+    /**
+     * This is for legacy uses of command/event mixins for common
+     * ncr operations. It will be removed in 3.x.
+     *
+     * @param Message $command
+     *
+     * @return Message
+     *
+     * @deprecated Will be removed in 3.x.
+     */
+    protected function createNodeRenamedEvent(Message $command): Message
+    {
+        return MessageResolver::resolveCurie('*:notify:event:notification-renamed:v1')::create();
+    }
+
+    /**
+     * This is for legacy uses of command/event mixins for common
+     * ncr operations. It will be removed in 3.x.
+     *
+     * @param Message $command
+     *
+     * @return Message
+     *
+     * @deprecated Will be removed in 3.x.
+     */
+    protected function createNodeScheduledEvent(Message $command): Message
+    {
+        return MessageResolver::resolveCurie('*:notify:event:notification-scheduled:v1')::create();
+    }
+
+    /**
+     * This is for legacy uses of command/event mixins for common
+     * ncr operations. It will be removed in 3.x.
+     *
+     * @param Message $command
+     *
+     * @return Message
+     *
+     * @deprecated Will be removed in 3.x.
+     */
+    protected function createNodeUnlockedEvent(Message $command): Message
+    {
+        return MessageResolver::resolveCurie('*:notify:event:notification-unlocked:v1')::create();
+    }
+
+    /**
+     * This is for legacy uses of command/event mixins for common
+     * ncr operations. It will be removed in 3.x.
+     *
+     * @param Message $command
+     *
+     * @return Message
+     *
+     * @deprecated Will be removed in 3.x.
+     */
+    protected function createNodeUnpublishedEvent(Message $command): Message
+    {
+        return MessageResolver::resolveCurie('*:notify:event:notification-unpublished:v1')::create();
+    }
+
+    /**
+     * This is for legacy uses of command/event mixins for common
+     * ncr operations. It will be removed in 3.x.
+     *
+     * @param Message $command
+     *
+     * @return Message
+     *
+     * @deprecated Will be removed in 3.x.
+     */
+    protected function createNodeUpdatedEvent(Message $command): Message
+    {
+        return MessageResolver::resolveCurie('*:notify:event:notification-updated:v1')::create();
     }
 }
